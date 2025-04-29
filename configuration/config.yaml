@@ -1,0 +1,82 @@
+task: "detect" # Could be 'detect', 'segment', or 'pose'
+mode: train
+
+# Train settings
+model:
+model_size: "n" # Can be: 'n', 's', 'm', 'l', 'x'
+data: 
+epochs: 100
+patience: 50
+batch: 16
+imgsz: 640
+save: True
+cache: False
+workers: 8
+pretrained: True
+optimizer: auto
+verbose: True
+seed: 0
+deterministic: True
+single_cls: False
+rect: False
+cos_lr: False
+close_mosaic: 10
+resume: False
+
+# Validation
+val: True
+split: val
+conf: 0.25
+iou: 0.7
+max_det: 300
+half: False  # kept for completeness even if not used with CPU
+
+# Prediction
+source:
+augment: False
+agnostic_nms: False
+classes:
+boxes: True
+
+# Segmentation (needed only for segmentation tasks)
+overlap_mask: True
+mask_ratio: 4
+
+# Hyperparameters
+lr0: 0.01
+lrf: 0.01
+momentum: 0.937
+weight_decay: 0.0005
+warmup_epochs: 3.0
+warmup_momentum: 0.8
+warmup_bias_lr: 0.1
+box: 7.5
+cls: 0.5
+dfl: 1.5
+pose: 12.0
+kobj: 1.0
+nbs: 64
+hsv_h: 0.015
+hsv_s: 0.7
+hsv_v: 0.4
+degrees: 0.0
+translate: 0.1
+scale: 0.5
+shear: 0.0
+perspective: 0.0
+flipud: 0.0
+fliplr: 0.5
+mosaic: 1.0
+mixup: 0.0
+
+# Transform COCO to YOLO dataset 
+coco_dataset_path: "coco_dataset"
+coco_ann_path: "annotations"
+ann_paths:
+  detection: "instances_val2017.json"
+  segmentation: "instances_val2017.json"
+  pose: "person_keypoints_val2017.json"
+img_dir: "images"
+out_dir: "yolo_dataset"
+max_images: 500
+train_ratio: 0.8
