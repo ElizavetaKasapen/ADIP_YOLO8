@@ -22,6 +22,8 @@ class TrainSettings:
     cos_lr: bool
     close_mosaic: int
     resume: bool
+    overlap_mask: bool
+    mask_ratio: int 
 
 @dataclass
 class ValidationSettings:
@@ -43,7 +45,7 @@ class PredictionSettings:
 @dataclass
 class SegmentationSettings:
     overlap_mask: bool
-    mask_ratio: int
+    mask_ratio: int #TODO if not needed for train func, del here
 
 @dataclass
 class HyperParameters:
@@ -60,6 +62,9 @@ class HyperParameters:
     pose: float
     kobj: float
     nbs: int
+
+@dataclass
+class AugmentationSettings:
     hsv_h: float
     hsv_s: float
     hsv_v: float
@@ -72,6 +77,10 @@ class HyperParameters:
     fliplr: float
     mosaic: float
     mixup: float
+    imgsz: int
+    copy_paste: float
+    mask_ratio: int
+    overlap_mask: bool
 
 @dataclass
 class CocoYoloConfig:
@@ -95,6 +104,7 @@ class Config:
     predict: PredictionSettings
     seg: SegmentationSettings
     hyp: HyperParameters
+    augment: AugmentationSettings
     dataset_config: CocoYoloConfig
     
 
@@ -117,5 +127,6 @@ def load_config(yaml_path: str = None) -> Config:
         predict=PredictionSettings(**{k: cfg_dict[k] for k in PredictionSettings.__annotations__.keys()}),
         seg=SegmentationSettings(**{k: cfg_dict[k] for k in SegmentationSettings.__annotations__.keys()}),
         hyp=HyperParameters(**{k: cfg_dict[k] for k in HyperParameters.__annotations__.keys()}),
+        augment=AugmentationSettings(**{k: cfg_dict[k] for k in AugmentationSettings.__annotations__.keys() if k in cfg_dict}),
         dataset_config = CocoYoloConfig(**{k: cfg_dict[k] for k in CocoYoloConfig.__annotations__.keys() if k in cfg_dict}),
     )
