@@ -22,17 +22,19 @@ class TrainSettings:
     cos_lr: bool
     close_mosaic: int
     resume: bool
-    overlap_mask: bool
     mask_ratio: int 
-
-@dataclass
-class ValidationSettings:
-    val: bool
-    split: str
-    conf: float
+    plots: bool
+    save_dir: str
+    project: str
+    name: str
+    save_txt: bool
+    conf: Optional[float]
+    plots: bool
+    half: bool
+    save_hybrid: bool  # (bool) save hybrid version of labels (labels + additional predictions)
     iou: float
     max_det: int
-    half: bool
+    save_json: bool  # (bool) save results to JSON file
 
 @dataclass
 class PredictionSettings:
@@ -41,11 +43,23 @@ class PredictionSettings:
     agnostic_nms: bool
     classes: Optional[Any]
     boxes: bool
+    show: bool
+    conf: Optional[float]
+    visualize: bool
+    line_width: Optional[int]
+    show_conf: bool
+    show_labels: bool 
+    retina_masks: bool
+    save_txt: bool
+    save_conf: bool
+    save_crop: bool
+    save: bool
+    iou: float
+    max_det: int
+    project: Optional[str] = None
+    name: Optional[str] = "predict_results"
+    verbose: bool = False
 
-@dataclass
-class SegmentationSettings:
-    overlap_mask: bool
-    mask_ratio: int #TODO if not needed for train func, del here
 
 @dataclass
 class HyperParameters:
@@ -62,6 +76,7 @@ class HyperParameters:
     pose: float
     kobj: float
     nbs: int
+    overlap_mask: bool
 
 @dataclass
 class AugmentationSettings:
@@ -99,12 +114,11 @@ class Config:
     model: Optional[str]
     data: Optional[str]
     model_size: str
+    augment: bool
     train: TrainSettings
-    val: ValidationSettings
     predict: PredictionSettings
-    seg: SegmentationSettings
     hyp: HyperParameters
-    augment: AugmentationSettings
+    augment_config: AugmentationSettings
     dataset_config: CocoYoloConfig
     
 
@@ -122,11 +136,10 @@ def load_config(yaml_path: str = None) -> Config:
         model=cfg_dict["model"],
         model_size = cfg_dict["model_size"],
         data = cfg_dict["data"],
-        train=TrainSettings(**{k: cfg_dict[k] for k in TrainSettings.__annotations__.keys()}),
-        val=ValidationSettings(**{k: cfg_dict[k] for k in ValidationSettings.__annotations__.keys()}),
-        predict=PredictionSettings(**{k: cfg_dict[k] for k in PredictionSettings.__annotations__.keys()}),
-        seg=SegmentationSettings(**{k: cfg_dict[k] for k in SegmentationSettings.__annotations__.keys()}),
-        hyp=HyperParameters(**{k: cfg_dict[k] for k in HyperParameters.__annotations__.keys()}),
-        augment=AugmentationSettings(**{k: cfg_dict[k] for k in AugmentationSettings.__annotations__.keys() if k in cfg_dict}),
-        dataset_config = CocoYoloConfig(**{k: cfg_dict[k] for k in CocoYoloConfig.__annotations__.keys() if k in cfg_dict}),
+        augment = cfg_dict["augment"],
+        train=TrainSettings(**cfg_dict['train']),
+        predict=PredictionSettings(**cfg_dict['predict']),
+        hyp=HyperParameters(**cfg_dict['hyperparameters']),
+        augment_config=AugmentationSettings(**cfg_dict['augmentation']),
+        dataset_config=CocoYoloConfig(**cfg_dict['dataset_config']),
     )
