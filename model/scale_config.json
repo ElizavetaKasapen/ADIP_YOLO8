@@ -1,0 +1,7 @@
+{
+    "n": {"depth_multiple": 0.33, "width_multiple": 0.25},
+    "s": {"depth_multiple": 0.33, "width_multiple": 0.50},
+    "m": {"depth_multiple": 0.67, "width_multiple": 0.75},
+    "l": {"depth_multiple": 1.00, "width_multiple": 1.00},
+    "x": {"depth_multiple": 1.00, "width_multiple": 1.25}
+}
