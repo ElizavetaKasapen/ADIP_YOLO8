@@ -66,7 +66,6 @@ class YOLOv8(nn.Module):
             self.forward(im)  # warmup
 
 def download_model(model_path, model):
-    print(f"[In function] model id: {id(model)}")
     print(f"Loading model from {model_path}...")
     ckpt = torch.load(model_path)
     if isinstance(ckpt, dict):
@@ -133,9 +132,7 @@ def build_yolov8(
         )
     # If model_path is provided, load the weights
     if model_path:
-        print(f"[Before] model id: {id(model)}")
         download_model(model_path, model)
-        print(f"[After] model id: {id(model)}")    
     # Print parameters
     total_params = sum(p.numel() for p in model.parameters())
     print(f"Total parameters: {total_params:,}")
