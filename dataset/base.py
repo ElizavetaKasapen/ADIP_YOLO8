@@ -13,8 +13,8 @@ import psutil
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
-from utils.dataset.constants import NUM_THREADS, TQDM_BAR_FORMAT, IMG_FORMATS
-from utils.logger import LOGGER
+from utils.config import NUM_THREADS, TQDM_BAR_FORMAT, IMG_FORMATS
+from utils.io import LOGGER
 
 
 class BaseDataset(Dataset):

@@ -1,13 +1,12 @@
 import math
 import random
 from copy import deepcopy
-import torch
 
 import cv2
 import numpy as np
-from utils.dataset.instance import Instances
-from utils.logger import LOGGER
-from metrics.metrics import bbox_ioa
+from dataset.instances import Instances
+from utils.io import LOGGER
+from metrics.metric import bbox_ioa
 
 class BaseAugmentation:
     """This implementation is from mmyolo."""

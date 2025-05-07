@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from utils.ops import polygons2masks_overlap, polygons2masks
+from utils.processing import polygons2masks_overlap, polygons2masks
 
 
 

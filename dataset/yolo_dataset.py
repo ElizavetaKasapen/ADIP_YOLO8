@@ -6,11 +6,10 @@ from itertools import repeat
 import numpy as np
 import torch
 from .base import BaseDataset
-from utils.dataset.constants import NUM_THREADS, TQDM_BAR_FORMAT, LOCAL_RANK
-from utils.logger import LOGGER
-from utils.dataset.verify_image_label import verify_image_label
-from utils.dataset.sys_utils import get_hash, is_dir_writeable, img2label_paths
-from utils.dataset.instance import Instances
+from utils.config import NUM_THREADS, TQDM_BAR_FORMAT, LOCAL_RANK
+from utils.io import LOGGER, get_hash, is_dir_writeable
+from utils.data import verify_image_label, img2label_paths
+from dataset.instances import Instances
 from .augment import build_transforms, ComposeTransforms, ResizeWithPadding
 from .data_formatter import Format
 

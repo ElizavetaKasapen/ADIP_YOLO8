@@ -1,7 +1,12 @@
 import os
+from pathlib import Path
 from tqdm import tqdm
 from pycocotools.coco import COCO
 from PIL import Image
+from configuration.config_loader import ConfigManager
+from configuration.config import CocoYoloConfig
+
+cfg = ConfigManager.get()
 
 def make_dirs(base, task):
     images_path = "images" 
@@ -150,3 +155,22 @@ def create_yolo_dataset_from_coco(ann_path, img_dir, out_dir, task="detect", max
         convert_pose(coco, train_ids, "train", out_dir, img_dir)
         convert_pose(coco, val_ids, "val", out_dir, img_dir)
         write_yaml(out_dir, "pose", labels_path=labels_path)
+
+
+
+def create_yolo_dataset(config: CocoYoloConfig, task = None):
+    tasks_to_process = [task] if task else config.ann_paths.keys()
+    for task in tasks_to_process:
+        ann_file = config.ann_paths[task]
+        ann_path = Path(config.coco_dataset_path) / config.coco_ann_path / ann_file
+        img_dir = Path(config.coco_dataset_path) / config.img_dir
+        out_dir = Path(config.out_dir) / task
+
+        create_yolo_dataset_from_coco(
+            ann_path=str(ann_path),
+            img_dir=str(img_dir),
+            out_dir=str(out_dir),
+            task=task,
+            max_images=config.max_images,
+            train_ratio=config.train_ratio
+        )

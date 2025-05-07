@@ -1,4 +1,4 @@
-task: "pose" # Could be 'detect', 'segment', or 'pose'
+task: "detect" # Could be 'detect', 'segment', or 'pose'
 mode: train
 augment: True # apply augment to train?
 model: 
