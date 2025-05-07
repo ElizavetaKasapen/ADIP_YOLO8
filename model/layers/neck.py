@@ -1,17 +1,11 @@
 import torch
 import torch.nn as nn
 from .basic_modules import Conv, C2f
-from utils.model.model_scales import adjust_channels, make_n
+from utils.models import make_n
 
 class Neck(nn.Module):
-    def __init__(self, base_channels=64,  depth_multiple=1.0): #width_multiple = 1.0,
+    def __init__(self, base_channels=64,  depth_multiple=1.0):
         super().__init__()
-
-        def make_n(n): return max(round(n * depth_multiple), 1)
-        # c2 = adjust_channels(base_channels * 2, width_multiple)   # 128
-        # c3 = adjust_channels(base_channels * 4, width_multiple)   # 256
-        # c4 = adjust_channels(base_channels * 8, width_multiple)   # 512
-        # c5 = adjust_channels(base_channels * 16, width_multiple)  # 1024
 
         # Top-down
         self.reduce_layer1 = Conv(base_channels * 8, base_channels * 4, 1, 1)

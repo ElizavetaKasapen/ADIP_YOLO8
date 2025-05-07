@@ -1,16 +1,12 @@
-# TODO define YOLO and use functions below
+import json
+import os
+import torch
 import torch.nn as nn
 from .layers.backbone import Backbone
 from .layers.neck import Neck
 from .layers.head import Detect, Segment, Pose
-from utils.model.model_scales import adjust_channels
+from utils.models import adjust_channels
 
-# from torchviz import make_dot
-# from torchinfo import summary
-import json
-import os
-import torch
-import math
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 config_path = os.path.join(current_dir, "scale_config.json")

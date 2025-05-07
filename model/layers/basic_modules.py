@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import math
-from utils.model.autopad import autopad
+from utils.models import autopad
 
 
 class Conv(nn.Module):

@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import math
 from .basic_modules import Conv, DFL, Proto
-from metrics.assigner import make_anchors, dist2bbox
+from loss.assigners import make_anchors, dist2bbox
 
 class Detect(nn.Module):
     """Detect head for detection models."""

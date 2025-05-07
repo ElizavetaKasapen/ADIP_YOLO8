@@ -1,15 +1,10 @@
-import torch
 import torch.nn as nn
 from .basic_modules import Conv, C2f, SPPF
-#from utils.model.model_scales import adjust_channels, make_n
+from utils.models import make_n
 
 class Backbone(nn.Module):
     def __init__(self, ch=3, base_channels=64, depth_multiple=1.0): #width_multiple=1.0,
         super().__init__()
-
-        # Define the number of layers per stage depending on depth #TODO move to utils
-        def make_n(n): return max(round(n * depth_multiple), 1)
-        
         
         # Stem
         self.stem = Conv(ch, base_channels, 3, 2)  # Downsample from 640x640 -> 320x320
