@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from metrics.metric import bbox_iou
+from metrics import bbox_iou
 from .assigners import bbox2dist
 
 

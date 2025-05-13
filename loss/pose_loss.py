@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from metrics.metric import OKS_SIGMA
+from metrics import OKS_SIGMA
 from utils.processing import xyxy2xywh
 from .assigners import make_anchors
 from .targets_loss  import KeypointLoss

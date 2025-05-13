@@ -50,8 +50,6 @@ class DetectionLoss:
         if self.use_dfl:
             b, a, c = pred_dist.shape  # batch, anchors, channels
             pred_dist = pred_dist.view(b, a, 4, c // 4).softmax(3).matmul(self.proj.type(pred_dist.dtype))
-            # pred_dist = pred_dist.view(b, a, c // 4, 4).transpose(2,3).softmax(3).matmul(self.proj.type(pred_dist.dtype))
-            # pred_dist = (pred_dist.view(b, a, c // 4, 4).softmax(2) * self.proj.type(pred_dist.dtype).view(1, 1, -1, 1)).sum(2)
         return dist2bbox(pred_dist, anchor_points, xywh=False)
 
     def __call__(self, preds, batch):
@@ -81,16 +79,8 @@ class DetectionLoss:
         _, target_bboxes, target_scores, fg_mask, _ = self.assigner(
             pred_scores.detach().sigmoid(), (pred_bboxes.detach() * stride_tensor).type(gt_bboxes.dtype),
             anchor_points * stride_tensor, gt_labels, gt_bboxes, mask_gt)
-        # print(f"[Loss Debug] fg_mask.sum(): {fg_mask.sum()}, target_scores.sum(): {target_scores.sum()}")
-        # print(f"[Loss Debug] GT bboxes: {gt_bboxes.shape}, mask_gt.sum(): {mask_gt.sum()}")
 
         target_scores_sum = max(target_scores.sum(), 1)
-        # print(f"pred_scores: {pred_scores}")
-        # print(f"target_scores: {target_scores}")
-        # print(f"target_scores: {target_scores_sum}")
-        # print(f"target_scores.sum(): {target_scores.sum()}")
-        # cls loss
-        # loss[1] = self.varifocal_loss(pred_scores, target_scores, target_labels) / target_scores_sum  # VFL way
         loss[1] = self.bce(pred_scores, target_scores.to(dtype)).sum() / target_scores_sum  # BCE
 
         # bbox loss

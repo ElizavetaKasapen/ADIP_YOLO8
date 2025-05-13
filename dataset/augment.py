@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 from dataset.instances import Instances
 from utils.io import LOGGER
-from metrics.metric import bbox_ioa
+from metrics import bbox_ioa
 
 class BaseAugmentation:
     """This implementation is from mmyolo."""
