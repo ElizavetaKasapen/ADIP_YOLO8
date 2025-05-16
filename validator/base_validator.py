@@ -48,7 +48,6 @@ class BaseValidator:
         self.save_dir = save_dir
         if self.args.conf is None:
             self.args.conf = 0.001  # default conf=0.001
-        #self.callbacks = _callbacks or get_callbacks()
         self.plots = {}
 
     def dir_to_save(self):
@@ -77,7 +76,6 @@ class BaseValidator:
         self.dataloader = self.dataloader or self.get_dataloader(self.data.get(self.args.split), self.args.batch)
         model.warmup(imgsz=(1, 3, imgsz, imgsz))  # warmup
         n_batches = len(self.dataloader)
-        #desc = self.metrics_summary_header()
         bar = tqdm(self.dataloader, desc="Validation", total=n_batches, bar_format=TQDM_BAR_FORMAT,  
                    dynamic_ncols=True, leave=False)
         self.names = classes
@@ -86,7 +84,6 @@ class BaseValidator:
 
         for batch_idx, batch in enumerate(bar):
             #if batch_idx == 5: break #TODO del it 
-           # self.run_callbacks('on_val_batch_start')
             self.batch_idx = batch_idx
             batch = self.preprocess(batch)
             preds = model(batch['img']) 

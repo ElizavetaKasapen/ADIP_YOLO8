@@ -21,6 +21,28 @@ from tqdm import tqdm
 cfg = ConfigManager.get()
 
 class Train:
+    """
+        Training class for YOLOv8 models.
+
+        Manages the training loop, optimization, validation, and logging.
+
+        Args:
+            task (str): Type of task - 'detect', 'segment', or 'pose'.
+            model (nn.Module): The YOLOv8 model to be trained.
+            train_loader (DataLoader): PyTorch DataLoader for training data.
+            val_loader (DataLoader): PyTorch DataLoader for validation data.
+            data_cfg (dict): Configuration dictionary for the dataset.
+
+        Attributes:
+            ema (ModelEMA): Exponential Moving Average wrapper for the model.
+            criterion (nn.Module): Task-specific loss function.
+            optimizer (torch.optim.Optimizer): Optimizer used during training.
+            validator (BaseValidator): Validator object for evaluating the model.
+            scaler (GradScaler): AMP gradient scaler for mixed-precision training.
+            scheduler: Learning rate scheduler.
+            metrics (dict): Dictionary to store evaluation metrics.
+            callbacks (list): Training callbacks.
+        """
 
     def __init__(self, task, model, train_loader, val_loader, data_cfg):
         self.task = cfg.task if cfg.task else task
@@ -41,30 +63,38 @@ class Train:
         self.set_optimizer()
         self.set_scheduler()
         metric_keys = self.validator.metrics.keys + self.label_loss_items(prefix="val")
-        self.metrics = dict(
-            zip(metric_keys, [0] * len(metric_keys))
-        )  # TODO: init metrics for plot_results()?
+        self.metrics = dict( zip(metric_keys, [0] * len(metric_keys)))  
         self.callbacks = get_callbacks()
         self.plot_idx = [0, 1, 2]
-        if self.train_args.plots:
-            self.plot_training_labels()  # TODO this function depends on task
-        # TODO maybe add this in the future, if model  wasuploded, not  created
-        # self.resume_training(ckpt)
-        # self.scheduler.last_epoch = self.start_epoch - 1  # do not move
         self.run_callbacks('on_pretrain_routine_start')
-        #self.run_callbacks('on_pretrain_routine_end')
        
 
     def set_loss(self):
+        """
+        Initializes the loss function and corresponding loss name labels 
+        based on the task (detection, segmentation, or pose).
+        """
         self.criterion = get_loss(self.task, self.model)
         self.loss_names = get_loss_names(self.task)
 
     def set_validator(self):
+        """
+        Initializes the validation based on the task.
+
+        The validator is used to evaluate the model's performance 
+        on the validation set after each epoch.
+        """
         self.validator = get_validator(self.task)(
             dataloader=self.val_loader, save_dir="val_results", args=self.train_args
         )
 
     def set_optimizer(self):
+        """
+        Configures the optimizer and computes gradient accumulation steps.
+
+        Also scales weight decay based on batch size and nominal batch size.
+        The total number of iterations is calculated for scheduler purposes.
+        """
         nbs = self.hparams.nbs
         weight_decay = self.hparams.weight_decay
         self.gradient_accumulate = max(
@@ -158,6 +188,12 @@ class Train:
         return optimizer
 
     def set_scheduler(self):
+        """
+        Sets the learning rate scheduler and early stopping mechanism.
+
+        Uses a cosine or linear learning rate schedule depending on configuration.
+        Initializes an early stopping utility to monitor training progress.
+        """
         lrf = self.hparams.lrf
         if self.train_args.cos_lr:
             self.lf = one_cycle(1, lrf, self.epochs)  # cosine 1->hyp['lrf']
@@ -169,34 +205,37 @@ class Train:
             False,
         )
 
-    def validate(self, epoch):
-        ema_model = self.ema.ema
-        self.validator.model = ema_model
-        # classes = self.data_cfg.names
-        # names_dict = {i: name for i, name in enumerate(classes)}
-        # TODO test this
+    def validate(self):
+        """
+        Runs the validation loop using the Exponential Moving Average (EMA) model.
+
+        Evaluates the current state of the model on the validation set and returns
+        the computed metrics and validation loss.
+        Args:
+            None
+        Returns:
+            Tuple[dict, torch.Tensor]: A dictionary of validation metrics and the validation loss tensor."""
         metrics_dict, loss = self.validator(
-            model=ema_model,
+            model=self.ema.ema,
             classes=self.model.names,
             loss_function=self.criterion,
             task=self.task,
         )
-        # print(f"metrics_dict:{metrics_dict}")
-        # writer.add_scalar("val/loss", loss[0] + loss[1] + loss[2], epoch) #TODO maybe explain this loss later + Add that loss can be for different (fr for segment it returns 4, where 4th is for mask)
-        # if metrics_dict: # TODO REDO it later during recording metrics
-        #     writer.add_scalar("val/mAP50", metrics_dict['metrics/mAP50(B)'], epoch)
-        #     writer.add_scalar("val/precision", metrics_dict['metrics/precision(B)'], epoch)
-        #     writer.add_scalar("val/recall", metrics_dict['metrics/recall(B)'], epoch)
-
-        # print(f"Epoch {epoch+1}: Val loss='val/box_loss: {loss[0]:.4f}', 'val/cls_loss': {loss[1]:.4f}, 'val/dfl_loss':{loss[2]:.4f}, mAP50={metrics_dict['metrics/mAP50(B)']:.4f}, P={metrics_dict['metrics/precision(B)']:.4f}, R={metrics_dict['metrics/recall(B)']:.4f}")
         return metrics_dict, loss
 
 
     def save_model(self, model_path):
+        """
+        Saves the current model, EMA model, and optimizer state to a file.
+
+        Ensures the destination directory exists before saving the model checkpoint.
+
+        Args:
+        model_path (str): The full path (including filename) where the model should be saved."""
+        
         os.makedirs(os.path.dirname(model_path), exist_ok=True)
         torch.save(
                 {
-                    #"epoch": epoch, #TODO if u add resume train
                     "model_state_dict": self.model.state_dict(),
                     "ema_state_dict": self.ema.ema.state_dict(),
                     "optimizer_state_dict": self.optimizer.state_dict(),
@@ -205,10 +244,12 @@ class Train:
             )
     
     def terminal_separator(self):
+        """Prints a horizontal separator line in the terminal."""
         terminal_width = shutil.get_terminal_size().columns
         tqdm.write("-"*terminal_width)
         
     def format_loss_items(self, loss_items, prefix):
+        """Formats labeled loss items as a human-readable string."""
         formatted_loss = ""
         items = self.label_loss_items(loss_items, prefix=prefix)
         for k, v in items.items():  formatted_loss += f"{k}: {v}\n"
@@ -216,6 +257,18 @@ class Train:
 
 
     def train(self, model_path = ""):
+        """
+        Executes the main training loop for the model.
+
+        Handles epoch and batch iterations, gradient accumulation, learning rate scheduling,
+        validation, logging, and model checkpoint saving.
+
+        Args:
+            model_path (str, optional): Optional path to save the final model. Defaults to an empty string.
+
+        Returns:
+            Tuple[nn.Module, str]: The trained model and the path to the model (model_path if provided, otherwise last chackpoint path)
+        """
         batches_per_epoch = len(self.train_loader)  # number of batches
         timestamp = datetime.now().strftime("%Y%m%d_%H%M")
         warmup_iters = (
@@ -224,7 +277,6 @@ class Train:
             else -1
         )  # number of warmup iterations
         last_opt_step = -1
-       # self.run_callbacks("on_train_start")
         LOGGER.info(
             f"Image sizes {self.train_args.imgsz} train, {self.train_args.imgsz} val\n"
             f"Using {self.train_loader.num_workers} dataloader workers\n"
@@ -235,7 +287,7 @@ class Train:
         if self.train_args.close_mosaic:
             base_idx = (self.epochs - self.train_args.close_mosaic) * batches_per_epoch
             self.plot_idx.extend([base_idx, base_idx + 1, base_idx + 2])
-        for epoch in range(self.epochs):  # TODO if you do resume, change here
+        for epoch in range(self.epochs):  
             self.epoch = epoch
             self.model.train()
             self.optimizer.zero_grad()
@@ -245,8 +297,6 @@ class Train:
             for i, batch in enumerate(pbar):
                 if i == 5:  # TODO del
                     break
-                #self.run_callbacks('on_train_batch_start')
-                #print(f"*** img_size*** :  {batch['img'].shape}")
                 current_iter, self.gradient_accumulate = warmup(
                     epoch, i, batches_per_epoch, warmup_iters, self.optimizer, self.batch_size, self.lf
                 )
@@ -262,25 +312,17 @@ class Train:
                         if self.total_loss is not None
                         else self.loss_items
                     )
-                #tqdm.write(f"\nBatch[{i}]:  loss: {self.loss}, loss items: {self.label_loss_items(self.loss_items, prefix=f'train batch[{i}]')}")
                 # Backward
                 self.scaler.scale(self.loss).backward()
                 # Optimize
                 if current_iter - last_opt_step >= self.gradient_accumulate:
                     self.optimizer_step()
                     last_opt_step = current_iter
-                # TODO add some logs maybe
                 self.scheduler.step()
-                # val_metrics_dict, val_loss = self.validate(
-                #     epoch
-                # )  # TODO it should be outside the epoch, this one is just for test
-                # print(
-                #     f"Validation loss: {val_loss }; validation loss items: {val_metrics_dict}"
-                # ) 
                 self.run_callbacks('on_batch_end') 
             print(f"\nTrain loss epoch[{epoch+1}]:  \nloss: {round(float(self.loss), 5)}, \nloss items: {self.format_loss_items(self.loss_items, f'train')}") 
-            self.metrics, self.val_loss = self.validate(epoch)  
-            print(f"\nValidation loss epoch[{epoch+1}]: \n{self.format_loss_items(self.val_loss, f'val')}")  #; validation loss items: {self.metrics} 
+            self.metrics, self.val_loss = self.validate()  
+            print(f"\nValidation loss epoch[{epoch+1}]: \n{self.format_loss_items(self.val_loss, f'val')}")  
             self.run_callbacks('on_fit_epoch_end')
             os.makedirs("checkpoints", exist_ok=True)
             path_to_model = f"checkpoints/yolov8_{self.task}_{timestamp}_epoch{epoch+1}.pt"
@@ -301,47 +343,7 @@ class Train:
         self.optimizer.zero_grad()
         if self.ema:
             self.ema.update(self.model)
-
-    def resume_training(self, ckpt):  # TODO is not used now
-        """Resume YOLO training from given epoch and best fitness."""
-        if ckpt is None:
-            return
-        best_fitness = 0.0
-        start_epoch = ckpt["epoch"] + 1
-        if ckpt["optimizer"] is not None:
-            self.optimizer.load_state_dict(ckpt["optimizer"])  # optimizer
-            best_fitness = ckpt["best_fitness"]
-        if self.ema and ckpt.get("ema"):
-            self.ema.ema.load_state_dict(ckpt["ema"].float().state_dict())  # EMA
-            self.ema.updates = ckpt["updates"]
-        if self.resume:
-            assert start_epoch > 0, (
-                f"{self.args.model} training to {self.epochs} epochs is finished, nothing to resume.\n"
-                f"Start a new training without resuming, i.e. 'yolo train model={self.args.model}'"
-            )
-            LOGGER.info(
-                f"Resuming training from {self.args.model} from epoch {start_epoch + 1} to {self.epochs} total epochs"
-            )
-        if self.epochs < start_epoch:
-            LOGGER.info(
-                f"{self.model} has been trained for {ckpt['epoch']} epochs. Fine-tuning for {self.epochs} more epochs."
-            )
-            self.epochs += ckpt["epoch"]  # finetune additional epochs
-        self.best_fitness = best_fitness
-        self.start_epoch = start_epoch
-        if start_epoch > (self.epochs - self.args.close_mosaic):
-            LOGGER.info("Closing dataloader mosaic")
-            if hasattr(self.train_loader.dataset, "mosaic"):
-                self.train_loader.dataset.mosaic = False
-            if hasattr(self.train_loader.dataset, "close_mosaic"):
-                self.train_loader.dataset.close_mosaic(hyp=self.args)
-
-    # def label_loss_items(self, loss_items=None, prefix="train"):
-    #     """
-    #     Returns a loss dict with labelled training loss items tensor
-    #     """
-    #     return {"loss": loss_items} if loss_items is not None else ["loss"]
-    
+                
     
     def label_loss_items(self, loss_items=None, prefix='train'):
         """
@@ -354,12 +356,6 @@ class Train:
             return dict(zip(keys, loss_items))
         else:
             return keys
-
-    def plot_training_labels(self): pass #TODO maybe delete
-        # """Create a labeled training plot of the YOLO model."""
-        # boxes = np.concatenate([lb['bboxes'] for lb in self.train_loader.dataset.labels], 0)
-        # cls = np.concatenate([lb['cls'] for lb in self.train_loader.dataset.labels], 0)
-        # plot_labels(boxes, cls.squeeze(), names=self.data['names'], save_dir=self.save_dir, on_plot=self.on_plot)
 
     def run_callbacks(self, event: str):
         """Run all existing callbacks associated with a particular event."""

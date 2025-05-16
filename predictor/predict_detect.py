@@ -7,8 +7,8 @@ from utils import processing as ops
 
 class DetectionPredictor(BasePredictor):
     
-    def __init__(self, predict_cfg=None, overrides=None, _callbacks=None, model=None, task="detect"):
-        super().__init__(predict_cfg, overrides, _callbacks, model, task)
+    def __init__(self, predict_cfg=None, overrides=None, model=None, task="detect"):
+        super().__init__(predict_cfg, overrides, model, task)
 
     def postprocess(self, preds, img, orig_imgs):
         """Postprocesses predictions and returns a list of Results objects."""

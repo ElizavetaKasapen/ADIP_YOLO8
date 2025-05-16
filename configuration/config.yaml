@@ -1,7 +1,7 @@
-task: "pose" # Could be 'detect', 'segment', or 'pose'
-mode: train
+task: "detect" # Could be 'detect', 'segment', or 'pose'
+mode: predict
 augment: True # apply augment to train
-model_path: null      # If provided, load and use this model
+model_path: models/detect/train/best.pt      # If provided, load and use this model
 save_model_path: "models/pose/train/exp1.pt"  # Where to save the model (only used in training)
 model_size: "n" # Can be: 'n', 's', 'm', 'l', 'x'
 data: 

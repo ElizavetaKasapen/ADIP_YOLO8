@@ -7,8 +7,8 @@ from utils import processing as ops
 
 class SegmentationPredictor(DetectionPredictor):
 
-    def __init__(self, predict_cfg=None, overrides=None, _callbacks=None, model=None, task="segment"):
-        super().__init__(predict_cfg, overrides, _callbacks, model, task)
+    def __init__(self, predict_cfg=None, overrides=None, model=None, task="segment"):
+        super().__init__(predict_cfg, overrides, model, task)
 
     def postprocess(self, preds, img, orig_imgs):
         p = ops.non_max_suppression(preds[0],

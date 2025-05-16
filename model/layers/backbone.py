@@ -3,7 +3,7 @@ from .basic_modules import Conv, C2f, SPPF
 from utils.models import make_n
 
 class Backbone(nn.Module):
-    def __init__(self, ch=3, base_channels=64, depth_multiple=1.0): #width_multiple=1.0,
+    def __init__(self, ch=3, base_channels=64, depth_multiple=1.0): 
         super().__init__()
         
         # Stem

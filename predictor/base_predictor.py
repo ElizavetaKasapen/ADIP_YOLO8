@@ -32,7 +32,7 @@ class BasePredictor:
         data_path (str): Path to data.
     """
 
-    def __init__(self, predict_cfg=None, overrides=None, _callbacks=None, model=None, task = None): #TODO del _callbacks
+    def __init__(self, predict_cfg=None, overrides=None, model=None, task = None): 
         """
         Initializes the BasePredictor class.
 
@@ -46,11 +46,8 @@ class BasePredictor:
         if self.args.conf is None:
             self.args.conf = 0.25 
         self.done_warmup = False
-
-
         # Usable if setup is done
         self.model = model
-        #self.data = self.args.data  # data_dict
         self.imgsz = (640, 640)
         self.device = None
         self.dataset = None
@@ -60,12 +57,10 @@ class BasePredictor:
         self.batch = None
         self.results = None
         self.transforms = None
-        #self.callbacks = get_default_callbacks()
         self.txt_path = None
         self.model.eval()
-        #callbacks.add_integration_callbacks(self)
 
-    def get_save_dir(self): #TODO pass task, name and project
+    def get_save_dir(self): 
         project = self.args.project or Path('runs_dir') / self.args.task
         name = self.args.name 
         return increment_path(Path(project) / name, exist_ok=True)
@@ -79,7 +74,6 @@ class BasePredictor:
         not_tensor = not isinstance(im, torch.Tensor)
         if not_tensor:
             im = np.stack(self.pre_transform(im))
-            #print(f"im.shape in predict after transforms: {im.shape}")
             im = im[..., ::-1].transpose((0, 3, 1, 2))  # BGR to RGB, BHWC to BCHW, (n, 3, h, w)
             im = np.ascontiguousarray(im)  # contiguous
             im = torch.from_numpy(im)
@@ -161,21 +155,14 @@ class BasePredictor:
         # Check if save_dir/ label file exists
         if self.args.save or self.args.save_txt:
             (self.save_dir / 'labels' if self.args.save_txt else self.save_dir).mkdir(parents=True, exist_ok=True)
-
-        #self.seen, self.windows, self.batch, profilers = 0, [], None, (ops.Profile(), ops.Profile(), ops.Profile())
         self.windows = []
-        #self.run_callbacks('on_predict_start')
         for batch in self.dataset:
-           # self.run_callbacks('on_predict_batch_start')
             self.batch = batch
             path, im0s, vid_cap, s = batch
 
             im = self.preprocess(im0s)
-
             preds = self.model(im)
-
             self.results = self.postprocess(preds, im, im0s)
-            #self.run_callbacks('on_predict_postprocess_end')
 
             # Visualize, save, write results
             n = len(im0s)
@@ -191,17 +178,12 @@ class BasePredictor:
                     self.show(p)
                 if self.args.save and self.plotted_img is not None:
                     self.save_preds(vid_cap, i, str(self.save_dir / p.name))
-
-            #self.run_callbacks('on_predict_batch_end')
             yield from self.results
 
         if self.args.save or self.args.save_txt or self.args.save_crop:
             nl = len(list(self.save_dir.glob('labels/*.txt')))  # number of labels
             s = f"\n{nl} label{'s' * (nl > 1)} saved to {self.save_dir / 'labels'}" if self.args.save_txt else ''
-            LOGGER.info(f"Results saved to {'bold', self.save_dir}{s}")
-
-        #self.run_callbacks('on_predict_end')
-
+            LOGGER.info(f"Results saved to {self.save_dir}{s}")
 
     def show(self, p):
         """Display an image in a window using OpenCV imshow()."""
@@ -217,14 +199,3 @@ class BasePredictor:
         """Save video predictions as mp4 at specified path."""
         im0 = self.plotted_img
         cv2.imwrite(save_path, im0)
-
-    # def run_callbacks(self, event: str):
-    #     """Runs all registered callbacks for a specific event."""
-    #     for callback in self.callbacks.get(event, []):
-    #         callback(self)
-
-    # def add_callback(self, event: str, func):
-    #     """
-    #     Add callback
-    #     """
-    #     self.callbacks[event].append(func)

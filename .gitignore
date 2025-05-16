@@ -1,0 +1,12 @@
+yolo_dataset
+coco_dataset
+checkpoints
+val_results
+runs_dir
+*.zip
+test_predict
+archive
+log_results
+__pycache__
+models
+.vscode

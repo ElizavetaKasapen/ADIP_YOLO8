@@ -17,6 +17,24 @@ with open(config_path, "r") as f:
 
 # YOLOv8 Model Class
 class YOLOv8(nn.Module):
+    """
+    YOLOv8 model class that composes the backbone, neck, and head modules.
+
+    Args:
+        nc (int, optional): Number of classes. Defaults to 80.
+        names_dict (dict, optional): Dictionary mapping class indices to names. Defaults to None.
+        args (Namespace, optional): Additional training or configuration arguments. Defaults to None.
+        backbone (nn.Module): The backbone module for feature extraction.
+        neck (nn.Module): The neck module for feature fusion.
+        head (nn.Module): The head module for prediction.
+
+    Attributes:
+        model (nn.ModuleList): Combined list of all model parts for unified access.
+        device (torch.device): The device on which the model is loaded.
+        stride (torch.Tensor): Computed stride values based on a dummy forward pass.
+        names (dict): Class names dictionary.
+        args (Namespace): Training/config arguments.
+    """
     def __init__(
         self, nc=80, names_dict=None, args=None, backbone=None, neck=None, head=None
     ):
@@ -44,6 +62,15 @@ class YOLOv8(nn.Module):
         self.args = args
 
     def forward(self, x):
+        """
+        Forward pass through the YOLOv8 model.
+
+        Args:
+            x (torch.Tensor): Input image tensor of shape (B, C, H, W).
+
+        Returns:
+            torch.Tensor or tuple: Output predictions from the model head.
+        """
         # Backbone
         features = self.backbone(x)
         # Neck (FPN)
@@ -60,8 +87,22 @@ class YOLOv8(nn.Module):
         if self.device.type != "cpu":
             im = torch.empty(*imgsz, dtype=torch.float, device=self.device)  # input
             self.forward(im)  # warmup
+            
 
 def download_model(model_path, model):
+    """
+    Loads model weights from file.
+
+    Supports loading from either 'ema_state_dict', 'model_state_dict', or direct state_dict format.
+
+    Args:
+        model_path (str): Path to the model file.
+        model (nn.Module): The YOLOv8 model instance to load weights into.
+
+    Raises:
+        KeyError: If file does not contain a valid state dict.
+        TypeError: If file is not a dictionary.
+    """
     print(f"Loading model from {model_path}...")
     ckpt = torch.load(model_path)
     if isinstance(ckpt, dict):
@@ -92,6 +133,22 @@ def build_yolov8(
     model_path=None,
     args=None,
 ):
+    """
+    Builds a YOLOv8 model based on size and task specification.
+
+    Constructs the backbone, neck, and task-specific head, then optionally loads pretrained weights.
+
+    Args:
+        model_size (str, optional): Size variant of the model ('n', 's', 'm', 'l', 'x'). Defaults to "n".
+        num_classes (int, optional): Number of classes for the detection/segmentation/pose task. Defaults to 80.
+        names_dict (dict, optional): Mapping from class indices to names. Defaults to None.
+        task (str, optional): Task type - 'detect', 'segment', or 'pose'. Defaults to "detect".
+        model_path (str, optional): Optional path to a checkpoint file to load pretrained weights. Defaults to None.
+        args (Namespace, optional): Additional arguments. Defaults to None.
+
+    Returns:
+        YOLOv8: The constructed YOLOv8 model.
+    """
     config = yolov8_configs[model_size]
     width_multiple = config["width_multiple"]
     depth_multiple = config["depth_multiple"]

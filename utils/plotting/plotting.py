@@ -20,7 +20,6 @@ from utils.tools import smooth
 
 colors = Colors()  # create instance for 'from utils.plots import colors'
 
-#TODO I have a feeling like it was somewhere before
 def output_to_target(output, max_det=300):
     """Convert model output to target format [batch_id, class_id, x, y, w, h, conf] for plotting."""
     targets = []

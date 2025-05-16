@@ -111,7 +111,6 @@ class DFL(nn.Module):
         # return self.conv(x.view(b, self.c1, 4, a).softmax(1)).view(b, 4, a)
     
     
-#TODO not sure it will be useful
 class Proto(nn.Module):
     """YOLOv8 mask Proto module for segmentation models."""
 
@@ -126,52 +125,3 @@ class Proto(nn.Module):
         """Performs a forward pass through layers using an upsampled input image."""
         return self.cv3(self.cv2(self.upsample(self.cv1(x))))    
     
-    
-#TODO says that it's for smaller models, check in the end    
-class DWConv(Conv):
-    """Depth-wise convolution."""
-
-    def __init__(self, c1, c2, k=1, s=1, d=1, act=True):  # ch_in, ch_out, kernel, stride, dilation, activation
-        super().__init__(c1, c2, k, s, g=math.gcd(c1, c2), d=d, act=act)
-            
-    
-#TODO everything below only for attention, maybe not needed 
-class ChannelAttention(nn.Module):
-    """Channel-attention module https://github.com/open-mmlab/mmdetection/tree/v3.0.0rc1/configs/rtmdet."""
-
-    def __init__(self, channels: int) -> None:
-        super().__init__()
-        self.pool = nn.AdaptiveAvgPool2d(1)
-        self.fc = nn.Conv2d(channels, channels, 1, 1, 0, bias=True)
-        self.act = nn.Sigmoid()
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return x * self.act(self.fc(self.pool(x)))
-    
-class SpatialAttention(nn.Module):
-    """Spatial-attention module."""
-
-    def __init__(self, kernel_size=7):
-        """Initialize Spatial-attention module with kernel size argument."""
-        super().__init__()
-        assert kernel_size in (3, 7), 'kernel size must be 3 or 7'
-        padding = 3 if kernel_size == 7 else 1
-        self.cv1 = nn.Conv2d(2, 1, kernel_size, padding=padding, bias=False)
-        self.act = nn.Sigmoid()
-
-    def forward(self, x):
-        """Apply channel and spatial attention on input for feature recalibration."""
-        return x * self.act(self.cv1(torch.cat([torch.mean(x, 1, keepdim=True), torch.max(x, 1, keepdim=True)[0]], 1)))
-    
-    
-class CBAM(nn.Module):
-    """Convolutional Block Attention Module."""
-
-    def __init__(self, c1, kernel_size=7):  # ch_in, kernels
-        super().__init__()
-        self.channel_attention = ChannelAttention(c1)
-        self.spatial_attention = SpatialAttention(kernel_size)
-
-    def forward(self, x):
-        """Applies the forward pass through C1 module."""
-        return self.spatial_attention(self.channel_attention(x))

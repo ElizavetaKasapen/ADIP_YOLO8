@@ -1,63 +1,79 @@
-# TODO combine all configs + train/valid/predict part here + maybe dataset process and mb downloading it
 from configuration.config_loader import ConfigManager
-from utils.load_data_config import load_data_config
-from create_dataset import create_yolo_dataset_from_config
+from utils.config import load_data_config
 from model.yolo import build_yolov8
-from dataset.check import is_yolo_dataset_created
-#from train import train
+from utils.data import is_yolo_dataset_created
+from dataset.loader import get_loaders, create_datasets
+from dataset.coco_to_yolo import create_yolo_dataset
+from predictor import set_predictor
 import os
-from torch.utils.data import DataLoader
-from dataset.yolo_dataset import YOLODataset
-from train.train_object import Train
 
-
+# Load global configuration
 cfg = ConfigManager.get()
 
-# TODO maybe put somehwere else
-
-
-def get_loaders(train_set, val_set, batch_size):
-    train_loader = DataLoader(
-        train_set, batch_size=batch_size, shuffle=True, collate_fn=YOLODataset.collate_fn)
-    val_loader = DataLoader(val_set, batch_size=batch_size,
-                            shuffle=False, collate_fn=YOLODataset.collate_fn)
-    return train_loader, val_loader
-
-
-# Checks if there is dataset for current task, if you don't pass the task, checks for every task
+# Check if the YOLO dataset for the given task exists; if not, create it
 if not is_yolo_dataset_created(cfg.dataset_config, cfg.task):
     print("YOLO dataset not found. Creating it...")
-    # Creates dataset for current task, if you don't have it, if you don't pass the task, checks for every task
-    create_yolo_dataset_from_config(cfg.dataset_config, cfg.task)
+    create_yolo_dataset(cfg.dataset_config, cfg.task)
 else:
     print("YOLO dataset already exists.")
 
-data_cfg = load_data_config(cfg.task, cfg.dataset_config.out_dir)
+# Load data configuration and class names
+data_cfg, names_dict = load_data_config(cfg.task, cfg.dataset_config.out_dir)
 
-# if there is path to model - cfg.model - it will download weights from file
-# get model
-model = build_yolov8(model_size=cfg.model_size,
-                     model_path=cfg.model, num_classes=data_cfg.nc, task=cfg.task)
-# type('Args', (object,), cfg.hyp)() #TODO check if I need all cfg, or only part of it?
-model.args = cfg.hyp
-# get data
-train_path = os.path.join(data_cfg.path, data_cfg.train)
-val_path = os.path.join(data_cfg.path, data_cfg.val)
-# get dataset and loaders #TODO set the train obj later
-batch_size = cfg.train.batch
-enable_masks = cfg.task == "segment"
-enable_keypoints = cfg.task == "pose"
-train_set = YOLODataset(img_path=train_path, labels_path=data_cfg.labels, data=data_cfg,
-                        aug_config=cfg.augment, enable_masks=enable_masks, enable_keypoints=enable_keypoints, augment=True)
-val_set = YOLODataset(img_path=val_path, labels_path=data_cfg.labels, data=data_cfg,
-                      aug_config=cfg.augment, enable_masks=enable_masks, enable_keypoints=enable_keypoints, augment=False)
-train_loader, val_loader = get_loaders(train_set, val_set, batch_size)
-print(
-    f"Dataloaders ready! train_loader: {len(train_loader)}; val_loader: {len(val_loader)}")
+# Build YOLOv8 model
+model = build_yolov8(
+    model_size=cfg.model_size,
+    model_path=cfg.model_path,
+    num_classes=data_cfg.nc,
+    names_dict=names_dict,
+    task=cfg.task,
+    args=cfg.hyp,
+)
 
-train = Train(cfg.task, model=model, train_loader = train_loader, val_loader = val_loader, train_args=cfg.train)
+# Handle training or prediction mode
+if cfg.mode == "train":
+    from train.train_object import Train
 
-# TODO call train
-#train()
-# TODO call val
-# TODO call predict
+    # Build paths to training and validation datasets
+    train_path = os.path.join(data_cfg.path, data_cfg.train)
+    val_path = os.path.join(data_cfg.path, data_cfg.val)
+
+    # Create dataset and data loaders
+    batch_size = cfg.train.batch
+    train_set, val_set = create_datasets(data_cfg, cfg, train_path, val_path)
+    train_loader, val_loader = get_loaders(train_set, val_set, batch_size)
+    print(f"Dataloaders ready! train_loader: {len(train_loader)}; val_loader: {len(val_loader)}")
+
+    # Initialize trainer
+    trainer = Train(
+        task=cfg.task,
+        model=model,
+        train_loader=train_loader,
+        val_loader=val_loader,
+        data_cfg=data_cfg,
+    )
+
+    # Train model and save checkpoint
+    if cfg.save_model_path is None:
+        model, path_to_model = trainer.train()  # Returns the path to the last checkpoint
+    else:
+        model, path_to_model = trainer.train(model_path=cfg.save_model_path)
+
+    print(f"Your model is trained! You can find it here: {path_to_model}")
+
+elif cfg.mode == "predict":
+    # Initialize predictor and run inference
+    predictor = set_predictor(task=cfg.task, model=model)
+    results = predictor(cfg.predict.source)
+
+    for r in results:
+        boxes = r.boxes.data  # Tensor of bounding box predictions
+        print(f"boxes: {boxes}\n")
+
+        masks = r.masks  # Mask predictions (only for segmentation)
+        print(f"masks:  {masks}\n")
+
+        print(f"path to result: {r.path}")
+
+else:
+    raise ValueError(f"Unsupported mode: {cfg.mode}. Please use 'train' or 'predict'.")
