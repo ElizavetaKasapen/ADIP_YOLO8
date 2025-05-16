@@ -32,7 +32,7 @@ model = build_yolov8(
 
 # Handle training or prediction mode
 if cfg.mode == "train":
-    from train.train_object import Train
+    from trainer.train_object import Train
 
     # Build paths to training and validation datasets
     train_path = os.path.join(data_cfg.path, data_cfg.train)
