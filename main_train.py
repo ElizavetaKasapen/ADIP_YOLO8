@@ -23,7 +23,7 @@ data_cfg, names_dict = load_data_config(cfg.task, cfg.dataset_config.out_dir)
 
 model = build_yolov8(
     model_size=cfg.model_size,
-    model_path=cfg.model,
+    model_path=cfg.model_path,
     num_classes=data_cfg.nc,
     names_dict=names_dict,
     task=cfg.task,
@@ -47,8 +47,11 @@ train = Train(
     val_loader=val_loader,
     data_cfg=data_cfg,
 )
-model, path_to_model = train.train()
-print(f"Your model is trained! Youcan find it here: {path_to_model}")
+if cfg.save_model_path == None:
+    model, path_to_model = train.train() #returns the path of last checkpoit
+else:
+    model, path_to_model = train.train(model_path = cfg.save_model_path)
+print(f"Your model is trained! You can find it here: {path_to_model}")
 
 
     

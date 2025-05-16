@@ -1,13 +1,14 @@
-task: "detect" # Could be 'detect', 'segment', or 'pose'
+task: "pose" # Could be 'detect', 'segment', or 'pose'
 mode: train
-augment: True # apply augment to train?
-model: 
+augment: True # apply augment to train
+model_path: null      # If provided, load and use this model
+save_model_path: "models/pose/train/exp1.pt"  # Where to save the model (only used in training)
 model_size: "n" # Can be: 'n', 's', 'm', 'l', 'x'
 data: 
 
 # Train settings
 train:
-  epochs: 1
+  epochs: 2
   patience: 50
   batch: 5
   imgsz: 640
@@ -41,7 +42,7 @@ train:
 
 # Prediction
 predict:
-  source:
+  source: "test_predict\\bus.jpg" 
   augment: False
   agnostic_nms: False
   classes:  # (int | list[int], optional) 

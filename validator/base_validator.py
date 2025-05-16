@@ -7,6 +7,7 @@ from tqdm import tqdm
 from utils.io import LOGGER, increment_path
 from utils.config import RANK, TQDM_BAR_FORMAT  
 from utils.data import get_targets
+from utils.callbacks import get_callbacks
 
 class BaseValidator:
     """
@@ -47,7 +48,7 @@ class BaseValidator:
         self.save_dir = save_dir
         if self.args.conf is None:
             self.args.conf = 0.001  # default conf=0.001
-
+        #self.callbacks = _callbacks or get_callbacks()
         self.plots = {}
 
     def dir_to_save(self):
@@ -76,15 +77,16 @@ class BaseValidator:
         self.dataloader = self.dataloader or self.get_dataloader(self.data.get(self.args.split), self.args.batch)
         model.warmup(imgsz=(1, 3, imgsz, imgsz))  # warmup
         n_batches = len(self.dataloader)
-        desc = self.metrics_summary_header()
-        bar = tqdm(self.dataloader, desc, n_batches, bar_format=TQDM_BAR_FORMAT)
+        #desc = self.metrics_summary_header()
+        bar = tqdm(self.dataloader, desc="Validation", total=n_batches, bar_format=TQDM_BAR_FORMAT,  
+                   dynamic_ncols=True, leave=False)
         self.names = classes
         self.init_metrics(model)
         self.json_results = []  # empty before each val
 
         for batch_idx, batch in enumerate(bar):
-            if batch_idx == 5: break #TODO del it 
-            self.run_callbacks('on_val_batch_start')
+            #if batch_idx == 5: break #TODO del it 
+           # self.run_callbacks('on_val_batch_start')
             self.batch_idx = batch_idx
             batch = self.preprocess(batch)
             preds = model(batch['img']) 
@@ -107,13 +109,11 @@ class BaseValidator:
             if self.args.plots and batch_idx < 3:
                 self.plot_val_samples(batch, batch_idx)
                 self.plot_predictions(batch, preds, batch_idx)
-
-            self.run_callbacks('on_val_batch_end')
+        print(self.metrics_summary_header())
         self.loss = self.loss / len(self.dataloader)
         stats = self.compute_metrics_results()
         self.finalize_metrics()
         self.print_results()
-        self.run_callbacks('on_val_end')
         self.dir_to_save()
         if self.args.save_json and self.json_results:
             with open(str(self.save_dir / 'predictions.json'), 'w') as f:
@@ -121,17 +121,12 @@ class BaseValidator:
                 json.dump(self.json_results, f)  # flatten and save
             stats = self.eval_json(stats)  # update stats
         if self.args.plots or self.args.save_json:
-            LOGGER.info(f"Results saved to {('bold', self.save_dir)}")
+            LOGGER.info(f"Results saved to {self.save_dir}")
         return stats, self.loss
 
     def add_callback(self, event: str, callback):
         """Appends the given callback."""
         self.callbacks[event].append(callback)
-
-    def run_callbacks(self, event: str):
-        """Runs all callbacks associated with a specified event."""
-        for callback in self.callbacks.get(event, []):
-            callback(self)
 
     def get_dataloader(self, dataset_path, batch_size):
         """Get data loader from dataset path and batch size."""

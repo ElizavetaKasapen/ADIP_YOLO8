@@ -111,7 +111,8 @@ class CocoYoloConfig:
 class Config:
     task: str
     mode: str
-    model: Optional[str]
+    model_path: Optional[str]
+    save_model_path: Optional[str]
     data: Optional[str]
     model_size: str
     augment: bool
@@ -133,7 +134,8 @@ def load_config(yaml_path: str = None) -> Config:
     return Config(
         task=cfg_dict["task"],
         mode=cfg_dict["mode"],
-        model=cfg_dict["model"],
+        model_path=cfg_dict["model_path"],
+        save_model_path = cfg_dict["save_model_path"],
         model_size = cfg_dict["model_size"],
         data = cfg_dict["data"],
         augment = cfg_dict["augment"],

@@ -14,7 +14,7 @@ class PoseValidator(DetectionValidator):
     def __init__(self, dataloader=None, save_dir=None, pbar=None, args=None, _callbacks=None):
         """Initialize a 'PoseValidator' object with custom parameters and assigned attributes."""
         self.args = args
-        self.data = load_data_config("pose")
+        self.data, _ = load_data_config("pose")
         super().__init__(dataloader, save_dir, pbar, args, _callbacks)
         self.metrics = PoseMetrics(save_dir=self.save_dir, on_plot=self.on_plot)
 

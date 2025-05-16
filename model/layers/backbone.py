@@ -11,19 +11,19 @@ class Backbone(nn.Module):
 
         # Stage 1
         self.stage1_conv = Conv(base_channels, base_channels * 2, 3, 2)  # 320 -> 160
-        self.stage1_c2f = C2f(base_channels * 2, base_channels * 2, n=make_n(3))
+        self.stage1_c2f = C2f(base_channels * 2, base_channels * 2, n=make_n(n = 3, depth_multiple = depth_multiple))
 
         # Stage 2
         self.stage2_conv = Conv(base_channels * 2, base_channels * 4, 3, 2)  # 160 -> 80
-        self.stage2_c2f = C2f(base_channels * 4, base_channels * 4, n=make_n(6))
+        self.stage2_c2f = C2f(base_channels * 4, base_channels * 4, n=make_n(n = 6, depth_multiple = depth_multiple))
 
         # Stage 3
         self.stage3_conv = Conv(base_channels * 4, base_channels * 8, 3, 2)  # 80 -> 40
-        self.stage3_c2f = C2f(base_channels * 8, base_channels * 8, n=make_n(6))
+        self.stage3_c2f = C2f(base_channels * 8, base_channels * 8, n=make_n(n = 6, depth_multiple = depth_multiple))
 
         # Stage 4
         self.stage4_conv = Conv(base_channels * 8, base_channels * 16, 3, 2)  # 40 -> 20
-        self.stage4_c2f = C2f(base_channels * 16, base_channels * 16, n=make_n(3))
+        self.stage4_c2f = C2f(base_channels * 16, base_channels * 16, n=make_n(n = 3, depth_multiple = depth_multiple))
 
         # SPPF
         self.sppf = SPPF(base_channels * 16, base_channels * 16)

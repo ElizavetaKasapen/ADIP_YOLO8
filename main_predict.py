@@ -9,12 +9,12 @@ cfg = ConfigManager.get()
 data_cfg, names_dict = load_data_config(cfg.task, cfg.dataset_config.out_dir)
 
 img_path="test_predict\\bus.jpg" 
-#cfg.model = "checkpoints\yolov8_segment_epoch1.pt"
+cfg.model = "checkpoints\yolov8_segment_epoch1.pt"
 #cfg.model = "checkpoints\\yolov8_pose_epoch1.pt"
-cfg.model = "checkpoints\\yolov8_detect_detect_epoch2.pt"
+#cfg.model = "checkpoints\\yolov8_detect_detect_epoch2.pt"
 model = build_yolov8(
     model_size=cfg.model_size,
-    model_path=cfg.model,
+    model_path=cfg.model_path,
     num_classes=data_cfg.nc,
     names_dict=names_dict,
     task=cfg.task,
@@ -28,6 +28,6 @@ for r in results:
     print(f"*** boxes: *** {boxes}\n")
     masks = r.masks  # Masks object for segment masks outputs
     print(f"*** masks: *** {masks}\n")
-    probs = r.probs  
-    print(f"*** probs: *** {probs}\n")
+    #probs = r.probs  
+    #print(f"*** probs: *** {probs}\n")
     print(f"*** path to result: *** {r.path}")

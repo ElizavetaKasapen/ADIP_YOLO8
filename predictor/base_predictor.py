@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from dataset.augment import ResizeWithPadding
 from utils.io import LOGGER, load_inference_source, increment_path
-from utils.callbacks.base import get_default_callbacks
+#from utils.callbacks.base import get_default_callbacks
 from configuration.config_loader import ConfigManager
 
 
@@ -32,7 +32,7 @@ class BasePredictor:
         data_path (str): Path to data.
     """
 
-    def __init__(self, predict_cfg=None, overrides=None, _callbacks=None, model=None, task = None):
+    def __init__(self, predict_cfg=None, overrides=None, _callbacks=None, model=None, task = None): #TODO del _callbacks
         """
         Initializes the BasePredictor class.
 
@@ -60,7 +60,7 @@ class BasePredictor:
         self.batch = None
         self.results = None
         self.transforms = None
-        self.callbacks = get_default_callbacks()
+        #self.callbacks = get_default_callbacks()
         self.txt_path = None
         self.model.eval()
         #callbacks.add_integration_callbacks(self)
@@ -164,9 +164,9 @@ class BasePredictor:
 
         #self.seen, self.windows, self.batch, profilers = 0, [], None, (ops.Profile(), ops.Profile(), ops.Profile())
         self.windows = []
-        self.run_callbacks('on_predict_start')
+        #self.run_callbacks('on_predict_start')
         for batch in self.dataset:
-            self.run_callbacks('on_predict_batch_start')
+           # self.run_callbacks('on_predict_batch_start')
             self.batch = batch
             path, im0s, vid_cap, s = batch
 
@@ -175,7 +175,7 @@ class BasePredictor:
             preds = self.model(im)
 
             self.results = self.postprocess(preds, im, im0s)
-            self.run_callbacks('on_predict_postprocess_end')
+            #self.run_callbacks('on_predict_postprocess_end')
 
             # Visualize, save, write results
             n = len(im0s)
@@ -192,7 +192,7 @@ class BasePredictor:
                 if self.args.save and self.plotted_img is not None:
                     self.save_preds(vid_cap, i, str(self.save_dir / p.name))
 
-            self.run_callbacks('on_predict_batch_end')
+            #self.run_callbacks('on_predict_batch_end')
             yield from self.results
 
         if self.args.save or self.args.save_txt or self.args.save_crop:
@@ -200,7 +200,7 @@ class BasePredictor:
             s = f"\n{nl} label{'s' * (nl > 1)} saved to {self.save_dir / 'labels'}" if self.args.save_txt else ''
             LOGGER.info(f"Results saved to {'bold', self.save_dir}{s}")
 
-        self.run_callbacks('on_predict_end')
+        #self.run_callbacks('on_predict_end')
 
 
     def show(self, p):
@@ -218,13 +218,13 @@ class BasePredictor:
         im0 = self.plotted_img
         cv2.imwrite(save_path, im0)
 
-    def run_callbacks(self, event: str):
-        """Runs all registered callbacks for a specific event."""
-        for callback in self.callbacks.get(event, []):
-            callback(self)
+    # def run_callbacks(self, event: str):
+    #     """Runs all registered callbacks for a specific event."""
+    #     for callback in self.callbacks.get(event, []):
+    #         callback(self)
 
-    def add_callback(self, event: str, func):
-        """
-        Add callback
-        """
-        self.callbacks[event].append(func)
+    # def add_callback(self, event: str, func):
+    #     """
+    #     Add callback
+    #     """
+    #     self.callbacks[event].append(func)

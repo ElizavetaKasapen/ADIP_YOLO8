@@ -10,18 +10,18 @@ class Neck(nn.Module):
         # Top-down
         self.reduce_layer1 = Conv(base_channels * 8, base_channels * 4, 1, 1)
         self.upsample1 = nn.Upsample(scale_factor=2, mode='nearest')
-        self.c2f1 = C2f(base_channels * 8, base_channels * 4, n=make_n(3))  # 256 + 256 = 512
+        self.c2f1 = C2f(base_channels * 8, base_channels * 4, n=make_n(n = 3, depth_multiple = depth_multiple))  # 256 + 256 = 512
 
         self.reduce_layer2 = Conv(base_channels * 4, base_channels * 2, 1, 1)
         self.upsample2 = nn.Upsample(scale_factor=2, mode='nearest')
-        self.c2f2 = C2f(base_channels * 4, base_channels * 2, n=make_n(3))  # 128 + 128 = 256
+        self.c2f2 = C2f(base_channels * 4, base_channels * 2, n=make_n(n = 3, depth_multiple = depth_multiple))  # 128 + 128 = 256
 
         # Bottom-up
         self.downsample1 = Conv(base_channels * 2, base_channels * 2, 3, 2)
-        self.c2f3 = C2f(base_channels * 6, base_channels * 4, n=make_n(3))  # 128 + 256 = 384
+        self.c2f3 = C2f(base_channels * 6, base_channels * 4, n=make_n(n = 3, depth_multiple = depth_multiple))  # 128 + 256 = 384
 
         self.downsample2 = Conv(base_channels * 4, base_channels * 4, 3, 2)
-        self.c2f4 = C2f(base_channels * 12, base_channels * 8, n=make_n(3)) # 256 + 512 = 768
+        self.c2f4 = C2f(base_channels * 12, base_channels * 8, n=make_n(n = 3, depth_multiple = depth_multiple)) # 256 + 512 = 768
 
 
 
