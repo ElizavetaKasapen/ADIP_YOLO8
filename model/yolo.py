@@ -143,7 +143,7 @@ def build_yolov8(
         num_classes (int, optional): Number of classes for the detection/segmentation/pose task. Defaults to 80.
         names_dict (dict, optional): Mapping from class indices to names. Defaults to None.
         task (str, optional): Task type - 'detect', 'segment', or 'pose'. Defaults to "detect".
-        model_path (str, optional): Optional path to a checkpoint file to load pretrained weights. Defaults to None.
+        model_path (str, optional): Optional path to file to load pretrained weights. Defaults to None.
         args (Namespace, optional): Additional arguments. Defaults to None.
 
     Returns:
