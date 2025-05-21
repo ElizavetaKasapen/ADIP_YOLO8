@@ -7,6 +7,6 @@ runs_dir
 test_predict
 archive
 log_results
-__pycache__
+**/__pycache__/
 models
 .vscode

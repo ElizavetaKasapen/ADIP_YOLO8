@@ -295,8 +295,6 @@ class Train:
             pbar = tqdm(self.train_loader, desc=f"Epoch {epoch+1}/{self.epochs}", dynamic_ncols=True, leave=True)
             self.total_loss = 0
             for i, batch in enumerate(pbar):
-                if i == 5:  # TODO del
-                    break
                 current_iter, self.gradient_accumulate = warmup(
                     epoch, i, batches_per_epoch, warmup_iters, self.optimizer, self.batch_size, self.lf
                 )

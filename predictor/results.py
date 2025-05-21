@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from copy import deepcopy
 from pathlib import Path
-from utils.structures import SimpleClass, Boxes, Masks, Keypoints #Probs, 
+from utils.structures import SimpleClass, Boxes, Masks, Keypoints, Probs
 from utils import processing as ops
 from utils.io import LOGGER
 from dataset.augment import ResizeWithPadding
@@ -41,7 +41,7 @@ class Results(SimpleClass):
         self.orig_shape = orig_img.shape[:2]
         self.boxes = Boxes(boxes, self.orig_shape) if boxes is not None else None  # native size boxes
         self.masks = Masks(masks, self.orig_shape) if masks is not None else None  # native size or imgsz masks
-        #self.probs = Probs(probs) if probs is not None else None
+        self.probs = Probs(probs) if probs is not None else None
         self.keypoints = Keypoints(keypoints, self.orig_shape) if keypoints is not None else None
         self.speed = {'preprocess': None, 'inference': None, 'postprocess': None}  # milliseconds per image
         self.names = names
@@ -68,8 +68,8 @@ class Results(SimpleClass):
             self.boxes = Boxes(boxes, self.orig_shape)
         if masks is not None:
             self.masks = Masks(masks, self.orig_shape)
-        # if probs is not None:
-        #     self.probs = probs
+        if probs is not None:
+            self.probs = probs
 
     def cpu(self):
         """Return a copy of the Results object with all tensors on CPU memory."""
@@ -177,7 +177,7 @@ class Results(SimpleClass):
         names = self.names
         pred_boxes, show_boxes = self.boxes, boxes
         pred_masks, show_masks = self.masks, masks
-        # pred_probs, show_probs = self.probs, probs
+        pred_probs, show_probs = self.probs, probs
         annotator = Annotator(
             deepcopy(self.orig_img if img is None else img),
             line_width,
@@ -221,12 +221,12 @@ class Results(SimpleClass):
         Return log string for each task.
         """
         log_string = ''
-       # probs = self.probs
+        probs = self.probs
         boxes = self.boxes
-        # if len(self) == 0:
-        #     return log_string if probs is not None else f'{log_string}(no detections), '
-        # if probs is not None:
-        #     log_string += f"{', '.join(f'{self.names[j]} {probs.data[j]:.2f}' for j in probs.top5)}, "
+        if len(self) == 0:
+            return log_string if probs is not None else f'{log_string}(no detections), '
+        if probs is not None:
+            log_string += f"{', '.join(f'{self.names[j]} {probs.data[j]:.2f}' for j in probs.top5)}, "
         if boxes:
             for c in boxes.cls.unique():
                 n = (boxes.cls == c).sum()  # detections per class
@@ -243,12 +243,12 @@ class Results(SimpleClass):
         """
         boxes = self.boxes
         masks = self.masks
-        # probs = self.probs
+        probs = self.probs
         kpts = self.keypoints
         texts = []
-        # if probs is not None:
-        #     # Classify
-        #     [texts.append(f'{probs.data[j]:.2f} {self.names[j]}') for j in probs.top5]
+        if probs is not None:
+            # Classify
+            [texts.append(f'{probs.data[j]:.2f} {self.names[j]}') for j in probs.top5]
         if boxes: #elif
             # Detect/segment/pose
             for j, d in enumerate(boxes):
@@ -275,9 +275,9 @@ class Results(SimpleClass):
             save_dir (str | pathlib.Path): Save path.
             file_name (str | pathlib.Path): File name.
         """
-        # if self.probs is not None:
-        #     LOGGER.warning('WARNING  Classify task do not support `save_crop`.')
-        #     return
+        if self.probs is not None:
+            LOGGER.warning('WARNING  Classify task do not support `save_crop`.')
+            return
         if isinstance(save_dir, str):
             save_dir = Path(save_dir)
         if isinstance(file_name, str):
@@ -290,9 +290,9 @@ class Results(SimpleClass):
 
     def tojson(self, normalize=False):
         """Convert the object to JSON format."""
-        # if self.probs is not None:
-        #     LOGGER.warning('Warning: Classify task do not support `tojson` yet.')
-        #     return
+        if self.probs is not None:
+            LOGGER.warning('Warning: Classify task do not support `tojson` yet.')
+            return
 
         import json
 

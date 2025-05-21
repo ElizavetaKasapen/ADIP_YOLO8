@@ -73,6 +73,9 @@ elif cfg.mode == "predict":
         masks = r.masks  # Mask predictions (only for segmentation)
         print(f"masks:  {masks}\n")
 
+        probs = r.probs  
+        print(f"probs:  {probs}\n")
+        
         print(f"path to result: {r.path}")
 
 else:

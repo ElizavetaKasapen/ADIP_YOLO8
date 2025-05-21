@@ -8,11 +8,11 @@ This repository provides a modular and extensible PyTorch-based **framework for 
 ## 🚀 Features
 ✅ Train YOLOv8 models for:
 
-    - Object Detection
+- Object Detection
 
-    - Instance Segmentation
+- Instance Segmentation
 
-    - Human Pose Estimation
+- Human Pose Estimation
 
 ↔️ Support for all YOLOv8 model sizes: 'n' (nano), 's' (small), 'm' (medium), 'l' (large), 'x' (extra-large)
 
@@ -46,7 +46,7 @@ pip install -r requirements.txt
 ```
 
 ## 📦 Required Dataset
-This framework expects the [COCO80 dataset](https://cocodataset.org/#download) pre-downloaded with the following structure (you can set the path to dataset in *CONFIGURATION/config.yaml*):
+This framework expects the [COCO80 dataset](https://cocodataset.org/#download) pre-downloaded with the following structure (you can set the path to dataset in *config.yaml*):
 
 ```
 coco_dataset/
@@ -55,13 +55,13 @@ coco_dataset/
     │   ├── instances_val2017.json  # for detection and segmentation
     │   └── person_keypoints_val2017.json  # for pose estimation
     ├── images/
-    │   └── val2017/ (or train2017/, etc.)  # Images folder (can also be train2017/, etc.)
+    │   └── val2017/  # Images folder (can also be train2017/, etc.)
 ```
 
-## ⚙️ Configuration
+## 🛠️ Configuration
 
 The configuration file is defined in:
-*CONFIGURATION/config.yaml*
+*config.yaml*
 
 Here you can define:
 - Task type (`detect`, `segment`, or `pose`)
@@ -96,7 +96,6 @@ dataset_config:
 ```
 CONFIGURATION/              # Configuration management
 │   config.py               # Defines config classes
-│   config.yaml             # Main YAML configuration file
 │   config_loader.py        # Loader for the YAML config
 │   yolo_data_config.py     # Data config for YOLO format
 DATASET/                     # Dataset preparation and transformation
@@ -194,14 +193,14 @@ VALIDATOR/                       # Validation logic for each task
 │   pose_val.py
 │   segment_val.py
 │   __init__.py
-
+config.yaml                       # Main YAML configuration file
 main.py                           # Entry point for training or prediction
 ```
 
 ## 🚀 Usage
 1. Train a Model
 
-Set up all the necessary configurations in *CONFIGURATION/config.yaml* including the mode `train` and run:
+Set up all the necessary configurations in *config.yaml* including the mode `train` and run:
 ```sh
 python main.py
 ```
@@ -209,21 +208,18 @@ This will:
 
 - Check if YOLO-format dataset exists. If not, it converts COCO to YOLO.
 
-- Create a new model or uploads existing one, if you set up model_path in *configuration/config.yaml*.
+- Create a new model or uploads existing one, if you set up model_path in *config.yaml*.
 
 - Train and validate the model for the task.
 
-- Prints the traing result and save the trained model to disk to save_model_path from *configuration/config.yaml* if provided, otherwise last checkpoint.
+- Prints the traing result and save the trained model to disk to save_model_path from *config.yaml* if provided, otherwise last checkpoint.
 
 2. Predict with a Model
-Set *mode: predict* and *predict* settings in *configuration/config.yaml*, and run:
+Set *mode: predict* and *predict* settings in *config.yaml*, and run:
 ```sh
 python main.py
 ```
 Predictions will be printed to the console and saved to the output directory.
-
-
-🧪 Example Output
 
 
 

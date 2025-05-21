@@ -48,6 +48,7 @@ class BasePredictor:
         self.done_warmup = False
         # Usable if setup is done
         self.model = model
+        self.model.eval()
         self.imgsz = (640, 640)
         self.device = None
         self.dataset = None
@@ -58,7 +59,7 @@ class BasePredictor:
         self.results = None
         self.transforms = None
         self.txt_path = None
-        self.model.eval()
+        
 
     def get_save_dir(self): 
         project = self.args.project or Path('runs_dir') / self.args.task

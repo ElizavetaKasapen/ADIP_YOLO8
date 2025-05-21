@@ -83,7 +83,6 @@ class BaseValidator:
         self.json_results = []  # empty before each val
 
         for batch_idx, batch in enumerate(bar):
-            #if batch_idx == 5: break #TODO del it 
             self.batch_idx = batch_idx
             batch = self.preprocess(batch)
             preds = model(batch['img']) 

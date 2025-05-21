@@ -131,7 +131,7 @@ def build_yolov8(
     names_dict=None,
     task="detect",
     model_path=None,
-    args=None,
+    args=None
 ):
     """
     Builds a YOLOv8 model based on size and task specification.

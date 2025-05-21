@@ -21,7 +21,6 @@ class TrainSettings:
     rect: bool
     cos_lr: bool
     close_mosaic: int
-    resume: bool
     mask_ratio: int 
     plots: bool
     save_dir: str
@@ -124,9 +123,7 @@ class Config:
     
 
 
-def load_config(yaml_path: str = None) -> Config:
-    if yaml_path is None:
-        yaml_path = Path(__file__).parent / "config.yaml"
+def load_config(yaml_path: str = "config.yaml") -> Config:
 
     with open(yaml_path, "r") as f:
         cfg_dict = yaml.safe_load(f)

@@ -239,46 +239,46 @@ class Keypoints(BaseTensor):
         return self.data[..., 2] if self.has_visible else None
     
     
-# class Probs(BaseTensor):
-#     """
-#     A class for storing and manipulating classification predictions.
+class Probs(BaseTensor):
+    """
+    A class for storing and manipulating classification predictions.
 
-#     Attributes:
-#         top1 (int): Index of the top 1 class.
-#         top5 (list[int]): Indices of the top 5 classes.
-#         top1conf (torch.Tensor): Confidence of the top 1 class.
-#         top5conf (torch.Tensor): Confidences of the top 5 classes.
+    Attributes:
+        top1 (int): Index of the top 1 class.
+        top5 (list[int]): Indices of the top 5 classes.
+        top1conf (torch.Tensor): Confidence of the top 1 class.
+        top5conf (torch.Tensor): Confidences of the top 5 classes.
 
-#     Methods:
-#         cpu(): Returns a copy of the probs tensor on CPU memory.
-#         numpy(): Returns a copy of the probs tensor as a numpy array.
-#         cuda(): Returns a copy of the probs tensor on GPU memory.
-#         to(): Returns a copy of the probs tensor with the specified device and dtype.
-#     """
+    Methods:
+        cpu(): Returns a copy of the probs tensor on CPU memory.
+        numpy(): Returns a copy of the probs tensor as a numpy array.
+        cuda(): Returns a copy of the probs tensor on GPU memory.
+        to(): Returns a copy of the probs tensor with the specified device and dtype.
+    """
 
-#     def __init__(self, probs, orig_shape=None) -> None:
-#         super().__init__(probs, orig_shape)
+    def __init__(self, probs, orig_shape=None) -> None:
+        super().__init__(probs, orig_shape)
 
-#     @property
-#     @lru_cache(maxsize=1)
-#     def top1(self):
-#         """Return the index of top 1."""
-#         return int(self.data.argmax())
+    @property
+    @lru_cache(maxsize=1)
+    def top1(self):
+        """Return the index of top 1."""
+        return int(self.data.argmax())
 
-#     @property
-#     @lru_cache(maxsize=1)
-#     def top5(self):
-#         """Return the indices of top 5."""
-#         return (-self.data).argsort(0)[:5].tolist()  # this way works with both torch and numpy.
+    @property
+    @lru_cache(maxsize=1)
+    def top5(self):
+        """Return the indices of top 5."""
+        return (-self.data).argsort(0)[:5].tolist()  # this way works with both torch and numpy.
 
-#     @property
-#     @lru_cache(maxsize=1)
-#     def top1conf(self):
-#         """Return the confidence of top 1."""
-#         return self.data[self.top1]
+    @property
+    @lru_cache(maxsize=1)
+    def top1conf(self):
+        """Return the confidence of top 1."""
+        return self.data[self.top1]
 
-#     @property
-#     @lru_cache(maxsize=1)
-#     def top5conf(self):
-#         """Return the confidences of top 5."""
-#         return self.data[self.top5]
+    @property
+    @lru_cache(maxsize=1)
+    def top5conf(self):
+        """Return the confidences of top 5."""
+        return self.data[self.top5]

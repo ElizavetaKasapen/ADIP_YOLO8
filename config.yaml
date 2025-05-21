@@ -24,7 +24,6 @@ train:
   rect: False
   cos_lr: False
   close_mosaic: 10
-  resume: False
   plots: True
   save_dir: "log_results"
   project:
