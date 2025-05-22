@@ -1,8 +1,8 @@
-task: "detect" # Could be 'detect', 'segment', or 'pose'
+task: "pose" # Could be 'detect', 'segment', or 'pose'
 mode: predict
 augment: True # apply augment to train
-model_path:     # If provided, load and use this model models/detect/train/best.pt  
-save_model_path: "models/detect/train/detect_2ep.pt"  # Where to save the model (only used in training)
+model_path:   models\pose\train\pose_10epochs_final_test.pt  # If provided, load and use this model models/detect/train/best.pt  
+save_model_path: "models/detect/train/detect_2epochs_final_test.pt"  # Where to save the model (only used in training)
 model_size: "n" # Can be: 'n', 's', 'm', 'l', 'x'
 data: 
 
@@ -37,6 +37,7 @@ train:
   max_det: 300  # (int) maximum number of detections per image
   save_json: False  # (bool) save results to JSON file
   mask_ratio: 4
+  overlap_mask: True
 
 
 # Prediction
@@ -72,14 +73,14 @@ hyperparameters:
   lrf: 0.01
   momentum: 0.937
   weight_decay: 0.0005
-  warmup_epochs: 3.0
+  warmup_epochs: 1.0
   warmup_momentum: 0.8
   warmup_bias_lr: 0.1
-  box: 7.5
-  cls: 0.5
-  dfl: 1.5
-  pose: 12.0
-  kobj: 1.0
+  box: 7.5  # (float) box loss gain
+  cls: 0.5  # (float) cls loss gain (scale with pixels)
+  dfl: 1.5  # (float) dfl loss gain
+  pose: 12.0  # (float) pose loss gain
+  kobj: 1.0  # (float) keypoint obj loss gain
   nbs: 64
   overlap_mask: True
 

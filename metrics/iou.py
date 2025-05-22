@@ -16,6 +16,10 @@ def kpt_iou(kpt1, kpt2, area, sigma, eps=1e-7):
     Returns:
         (torch.Tensor): A tensor of shape (N, M) representing keypoint similarities.
     """
+    device = kpt1.device if isinstance(kpt1, torch.Tensor) else torch.device("cpu")
+    kpt2 = kpt2.to(device)
+    if sigma is not None and isinstance(sigma, torch.Tensor):
+        sigma = sigma.to(device)
     distance_squared = (kpt1[:, None, :, 0] - kpt2[..., 0]) ** 2 + (kpt1[:, None, :, 1] - kpt2[..., 1]) ** 2  # (N, M, 17)
     sigma = torch.tensor(sigma, device=kpt1.device, dtype=kpt1.dtype)  # (17, )
     kpt_mask = kpt1[..., 2] != 0  # (N, 17)

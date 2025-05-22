@@ -5,8 +5,8 @@ from utils import processing as ops
 
 class PosePredictor(DetectionPredictor):
 
-    def __init__(self, predict_cfg=None, overrides=None, _callbacks=None, model=None, task="pose"):
-        super().__init__(predict_cfg, overrides, _callbacks, model, task)
+    def __init__(self, predict_cfg=None, overrides=None,  model=None, task="pose"):
+        super().__init__(predict_cfg, overrides, model, task)
 
     def postprocess(self, preds, img, orig_imgs):
         """Return detection results for a given input image or list of images."""

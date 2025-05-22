@@ -112,7 +112,8 @@ class DetectionValidator(BaseValidator):
         if not self.stats:  
             self.nt_per_class = np.zeros(self.nc, dtype=int)  #  Set zeros manually
             return None 
-        stats = [torch.cat(x, 0).cpu().numpy() for x in zip(*self.stats)]  # to numpy
+        #stats = [torch.cat(x, 0).cpu().numpy() for x in zip(*self.stats)]  # to numpy
+        stats = [torch.cat([t.to("cpu") for t in x], 0).numpy() for x in zip(*self.stats)]
         if len(stats) and stats[0].any():
             self.metrics.process(*stats)
         self.nt_per_class = np.bincount(stats[-1].astype(int), minlength=self.nc)  # number of targets per class
@@ -147,6 +148,9 @@ class DetectionValidator(BaseValidator):
         Returns:
             correct (array[N, 10]), for 10 IoU levels
         """
+        device = labels.device if labels.is_cuda else detections.device
+        detections = detections.to(device)
+        labels = labels.to(device)
         iou = ops.box_iou(labels[:, 1:], detections[:, :4])
         correct = np.zeros((detections.shape[0], self.iouv.shape[0])).astype(bool)
         correct_class = labels[:, 0:1] == detections[:, 5]
@@ -176,12 +180,22 @@ class DetectionValidator(BaseValidator):
 
     def plot_predictions(self, batch, preds, ni):
         """Plots predicted bounding boxes on input images and saves the result."""
-        plot_images(batch['img'],
-                    *output_to_target(preds, max_det=self.args.max_det),
-                    paths=batch['im_file'],
-                    fname=Path(self.save_dir) / Path(f'val_batch{ni}_pred.jpg'),
-                    names=self.names,
-                    on_plot=self.on_plot)  # pred
+        batch_idx, cls, bboxes, _ = output_to_target(preds, max_det=self.args.max_det)  # discard conf
+       
+
+        plot_images(
+            images=batch['img'],
+            batch_idx=batch_idx,
+            cls=cls,
+            bboxes=bboxes,
+            masks=np.zeros(0, dtype=np.uint8),
+            kpts=np.zeros((0, 51), dtype=np.float32),  
+            paths=batch['im_file'],
+            fname=Path(self.save_dir) / f'val_batch{ni}_pred.jpg',
+            names=self.names,
+            on_plot=self.on_plot
+        )
+      
 
     def save_one_txt(self, predn, save_conf, shape, file):
         """Save YOLO detections to a txt file in normalized coordinates in a specific format."""

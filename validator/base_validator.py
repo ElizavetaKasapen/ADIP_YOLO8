@@ -83,28 +83,19 @@ class BaseValidator:
         self.json_results = []  # empty before each val
 
         for batch_idx, batch in enumerate(bar):
-            self.batch_idx = batch_idx
+            self.batch_i = batch_idx
             batch = self.preprocess(batch)
             preds = model(batch['img']) 
             targets = get_targets(batch, self.device.type, self.args.task)
-            loss_items = self.loss_function(preds, targets)[1]
+            loss_items = self.loss_function(preds, batch)[1] #self.loss_function(preds, targets)[1]
             if not hasattr(self, 'loss') or self.loss.numel() == 0:
                 self.loss = torch.zeros_like(loss_items, device=self.device.type)
-            self.loss += loss_items
-            if self.args.task == "detect" or self.args.task == "pose":
-                preds = self.postprocess(preds)
-            if self.args.task == "segment":
-                preds, proto = self.postprocess(preds)
-
-                if len(preds) == 0 or preds[0].shape[0] == 0:
-                    #print("Skipped potting empty predictions!")
-                    self.update_metrics(preds, batch) 
-                    continue  # skip empty preds safely
-
-            self.update_metrics(preds, batch)
+            self.loss += loss_items  
+            detections = self.postprocess(preds)
+            self.update_metrics(detections, batch)
             if self.args.plots and batch_idx < 3:
                 self.plot_val_samples(batch, batch_idx)
-                self.plot_predictions(batch, preds, batch_idx)
+                self.plot_predictions(batch, detections, batch_idx)
         print(self.metrics_summary_header())
         self.loss = self.loss / len(self.dataloader)
         stats = self.compute_metrics_results()

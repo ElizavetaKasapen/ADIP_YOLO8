@@ -34,6 +34,8 @@ class TrainSettings:
     iou: float
     max_det: int
     save_json: bool  # (bool) save results to JSON file
+    overlap_mask: bool
+
 
 @dataclass
 class PredictionSettings:

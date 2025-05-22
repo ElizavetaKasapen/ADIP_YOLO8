@@ -1,5 +1,7 @@
 import math
+import torch.nn as nn
 from copy import deepcopy
+
 
 
 def copy_model_attributes(a, b, include=(), exclude=()):
@@ -10,6 +12,15 @@ def copy_model_attributes(a, b, include=(), exclude=()):
         else:
             setattr(a, k, v)
 
+# def is_parallel(model):
+#     """Returns True if model is of type DP or DDP."""
+#     return isinstance(model, (nn.parallel.DataParallel, nn.parallel.DistributedDataParallel))
+
+# def de_parallel(model):
+#     """De-parallelize a model: returns single-GPU model if model is of type DP or DDP."""
+#     return model.module if is_parallel(model) else model
+
+
 class ModelEMA:
     """Updated Exponential Moving Average (EMA).
     Keeps a moving average of everything in the model state_dict (parameters and buffers)
@@ -18,7 +29,7 @@ class ModelEMA:
 
     def __init__(self, model, decay=0.9999, tau=2000, updates=0):
         """Create EMA."""
-        self.ema = deepcopy(model).eval()  
+        self.ema = deepcopy(model).eval()  # FP32 EMA
         self.updates = updates  # number of EMA updates
         self.decay = lambda x: decay * (1 - math.exp(-x / tau))  # decay exponential ramp (to help early epochs)
         for p in self.ema.parameters():
@@ -32,6 +43,7 @@ class ModelEMA:
             decay_factor  = self.decay(self.updates)
 
             model_state = model.state_dict()  # model state_dict 
+            #model_state = de_parallel(model).state_dict()  # model state_dict
             for param_name, param_tensor in self.ema.state_dict().items():
                 if param_tensor.dtype.is_floating_point:  # true for FP16 and FP32
                     param_tensor *= decay_factor
@@ -42,3 +54,4 @@ class ModelEMA:
         """Updates attributes and saves stripped model with optimizer removed."""
         if self.enabled:
             copy_model_attributes(self.ema, model, include, exclude)
+

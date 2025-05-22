@@ -1,6 +1,8 @@
 from utils.io import LOGGER 
 from collections import defaultdict
 from copy import deepcopy
+from datetime import datetime
+from pathlib import Path
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -27,28 +29,25 @@ def on_pretrain_routine_start(trainer):
     if SummaryWriter:
         try:
             global writer
-            writer = SummaryWriter(str(trainer.train_args.save_dir))
+            run_name = f"{trainer.task}_{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+            log_dir = Path(trainer.train_args.save_dir) / Path(run_name)
+            writer = SummaryWriter(str(log_dir))
             prefix = 'TensorBoard: '
-            LOGGER.info(f"{prefix}Start with 'tensorboard --logdir {trainer.train_args.save_dir}', view at http://localhost:6006/")
+            LOGGER.info(f"{prefix}Start with 'tensorboard --logdir {log_dir}', view at http://localhost:6006/")
         except Exception as e:
             LOGGER.warning(f'WARNING TensorBoard not initialized correctly, not logging this run. {e}')
 
 
-def on_batch_end(trainer):
-    """Logs scalar statistics at the end of a training batch.""" #loss_items
-    _log_scalars(trainer.label_loss_items(trainer.total_loss, prefix='train'), trainer.epoch + 1)
-
-
 def on_fit_epoch_end(trainer):
     """Logs epoch metrics at end of training epoch."""
+    _log_scalars(trainer.label_loss_items(trainer.loss_items, prefix='train'), trainer.epoch + 1)
     _log_scalars(trainer.metrics, trainer.epoch + 1)
-    _log_scalars(trainer.label_loss_items(trainer.val_loss , prefix='val'), trainer.epoch + 1)
+    _log_scalars(trainer.label_loss_items(trainer.val_loss, prefix='val'), trainer.epoch + 1)
 
 
 callbacks = {
     'on_pretrain_routine_start': on_pretrain_routine_start,
-    'on_fit_epoch_end': on_fit_epoch_end,
-    'on_batch_end': on_batch_end}
+    'on_fit_epoch_end': on_fit_epoch_end}
 
 
 def get_callbacks():

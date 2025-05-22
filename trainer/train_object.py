@@ -1,5 +1,5 @@
 from configuration.config_loader import ConfigManager
-from torch.cuda.amp import GradScaler
+from torch.amp import GradScaler
 from utils.io import LOGGER
 import torch
 import shutil
@@ -294,34 +294,45 @@ class Train:
             self.optimizer.zero_grad()
             self.terminal_separator()
             pbar = tqdm(self.train_loader, desc=f"Epoch {epoch+1}/{self.epochs}", dynamic_ncols=True, leave=True)
-            self.total_loss = 0
+            self.running_loss = 0
+            self.running_loss_items = None
+            total_images = 0
             for i, batch in enumerate(pbar):
+                if i ==1: break #TODO del
+                total_images += batch['img'].shape[0]
                 current_iter = i + batches_per_epoch * epoch
                 if current_iter <= warmup_iters:
                     current_iter, self.gradient_accumulate = warmup(
                         epoch, current_iter, warmup_iters, self.optimizer, self.batch_size, self.lf
                     )
                 # Forward
-                with torch.cuda.amp.autocast(self.use_amp):
+                with torch.amp.autocast(self.device.type):
                     imgs, targets = preprocess_batch(
                         self.device, batch, self.task, self.train_args.imgsz
                     )
+                   
                     outputs = self.model(imgs)
-                    self.loss, self.loss_items = self.criterion(outputs, targets)
-                    self.total_loss = (
-                        (self.total_loss * i + self.loss_items) / (i + 1)
-                        if self.total_loss is not None
-                        else self.loss_items
-                    )
+                    modif_batch = targets
+                    modif_batch['img'] = imgs
+                    self.loss, self.loss_items = self.criterion(outputs, modif_batch) 
+                    self.running_loss += self.loss.item()
+        
+                    if self.running_loss_items is None:
+                        self.running_loss_items = self.loss_items
+                    else:
+                        self.running_loss_items = [x + y for x, y in zip(self.running_loss_items, self.loss_items)]
+                   
                 # Backward
                 self.scaler.scale(self.loss).backward()
                 # Optimize
                 if current_iter - last_opt_step >= self.gradient_accumulate:
                     self.optimizer_step()
                     last_opt_step = current_iter
-                self.scheduler.step()
-                self.run_callbacks('on_batch_end') 
-            print(f"\nTrain loss epoch[{epoch+1}]:  \nloss: {round(float(self.loss), 5)}, \nloss items: {self.format_loss_items(self.loss_items, f'train')}") 
+               # self.run_callbacks('on_batch_end') 
+            self.scheduler.step()
+            self.total_loss = self.running_loss / total_images 
+            self.loss_items = [x / total_images  for x in self.running_loss_items]
+            print(f"\nTrain loss epoch[{epoch+1}]:  \nloss: {round(float(self.total_loss), 5)}, \nloss items: {self.format_loss_items(self.loss_items, f'train')}") 
             self.metrics, self.val_loss = self.validate()  
             print(f"\nValidation loss epoch[{epoch+1}]: \n{self.format_loss_items(self.val_loss, f'val')}")  
             self.run_callbacks('on_fit_epoch_end')

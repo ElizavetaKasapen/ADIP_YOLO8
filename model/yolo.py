@@ -104,7 +104,7 @@ def download_model(model_path, model):
         TypeError: If file is not a dictionary.
     """
     print(f"Loading model from {model_path}...")
-    ckpt = torch.load(model_path)
+    ckpt = torch.load(model_path, map_location = model.device )
     if isinstance(ckpt, dict):
         if "ema_state_dict" in ckpt:
             print("Loading ema_state_dict...")

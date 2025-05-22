@@ -203,6 +203,10 @@ class Annotator:
                 self.draw.polygon([tuple(b) for b in box], width=self.lw, outline=color)  # PIL requires tuple box
             else:
                 p1 = (box[0], box[1])
+                # Ensure box is in (x0, y0, x1, y1) format with x1 >= x0 and y1 >= y0
+                x0, y0, x1, y1 = box
+                box = [min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1)]
+                p1 = (box[0], box[1])
                 self.draw.rectangle(box, width=self.lw, outline=color)  # box
             if label:
                 bbox = self.draw.textbbox((0, 0), label, font=self.font)

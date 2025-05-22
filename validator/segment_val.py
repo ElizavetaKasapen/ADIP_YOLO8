@@ -3,13 +3,17 @@ from pathlib import Path
 import numpy as np
 import torch
 import torch.nn.functional as F
+from multiprocessing.pool import ThreadPool
 from .detect_val import DetectionValidator
 from utils import processing as ops
+from utils.processing.geometry import box_iou
 from metrics import  SegmentMetrics, mask_iou
+
 from utils.plotting.plotting import output_to_target, plot_images
 
 
 class SegmentationValidator(DetectionValidator):
+
 
     def __init__(self, dataloader=None, save_dir=None, pbar=None, args=None, _callbacks=None):
         """Initialize SegmentationValidator and set task to 'segment', metrics to SegmentMetrics."""
@@ -32,7 +36,7 @@ class SegmentationValidator(DetectionValidator):
         else:
             self.process = ops.process_mask  # faster
 
-    def metrics_summary_header(self):
+    def get_desc(self):
         """Return a formatted description of evaluation metrics."""
         return ('%22s' + '%11s' * 10) % ('Class', 'Images', 'Instances', 'Box(P', 'R', 'mAP50', 'mAP50-95)', 'Mask(P',
                                          'R', 'mAP50', 'mAP50-95)')
@@ -52,6 +56,7 @@ class SegmentationValidator(DetectionValidator):
 
     def update_metrics(self, preds, batch):
         """Metrics."""
+    
         for si, (pred, proto) in enumerate(zip(preds[0], preds[1])):
             idx = batch['batch_idx'] == si
             cls = batch['cls'][idx]
@@ -91,6 +96,7 @@ class SegmentationValidator(DetectionValidator):
                                 ratio_pad=batch['ratio_pad'][si])  # native-space labels
                 labelsn = torch.cat((cls, tbox), 1)  # native-space labels
                 correct_bboxes = self._process_batch(predn, labelsn)
+                # TODO: maybe remove these `self.` arguments as they already are member variable
                 correct_masks = self._process_batch(predn,
                                                     labelsn,
                                                     pred_masks,
@@ -113,9 +119,12 @@ class SegmentationValidator(DetectionValidator):
                                              shape,
                                              ratio_pad=batch['ratio_pad'][si])
                 self.pred_to_json(predn, batch['im_file'][si], pred_masks)
+            # if self.args.save_txt:
+            #    save_one_txt(predn, save_conf, shape, file=save_dir / 'labels' / f'{path.stem}.txt')
 
     def finalize_metrics(self, *args, **kwargs):
         """Sets speed and confusion matrix for evaluation metrics."""
+       # self.metrics.speed = self.speed
         self.metrics.confusion_matrix = self.confusion_matrix
 
     def _process_batch(self, detections, labels, pred_masks=None, gt_masks=None, overlap=False, masks=False):
@@ -138,11 +147,13 @@ class SegmentationValidator(DetectionValidator):
                 gt_masks = gt_masks.gt_(0.5)
             iou = mask_iou(gt_masks.view(gt_masks.shape[0], -1), pred_masks.view(pred_masks.shape[0], -1))
         else:  # boxes
-            iou = ops.box_iou(labels[:, 1:], detections[:, :4])
+            iou = box_iou(labels[:, 1:], detections[:, :4])
 
         correct = np.zeros((detections.shape[0], self.iouv.shape[0])).astype(bool)
+        labels = labels.to(detections.device)
         correct_class = labels[:, 0:1] == detections[:, 5]
         for i in range(len(self.iouv)):
+            correct_class = correct_class.to(iou.device)
             x = torch.where((iou >= self.iouv[i]) & correct_class)  # IoU > threshold and classes match
             if x[0].shape[0]:
                 matches = torch.cat((torch.stack(x, 1), iou[x[0], x[1]][:, None]),
@@ -163,20 +174,28 @@ class SegmentationValidator(DetectionValidator):
                     batch['bboxes'],
                     batch['masks'],
                     paths=batch['im_file'],
-                    fname=Path(self.save_dir) / Path(f'val_batch{ni}_labels.jpg'),
+                    fname= Path(self.save_dir) / Path(f'val_batch{ni}_labels.jpg'),
                     names=self.names,
                     on_plot=self.on_plot)
+      
 
     def plot_predictions(self, batch, preds, ni):
         """Plots batch predictions with masks and bounding boxes."""
+        batch_idx, cls, bboxes, _ = output_to_target(preds[0], max_det=15)  # discard conf
+        masks = torch.cat(self.plot_masks, dim=0) if len(self.plot_masks) else self.plot_masks
+
         plot_images(
-            batch['img'],
-            *output_to_target(preds[0], max_det=15),  # not set to self.args.max_det due to slow plotting speed
-            torch.cat(self.plot_masks, dim=0) if len(self.plot_masks) else self.plot_masks,
+            images=batch['img'],
+            batch_idx=batch_idx,
+            cls=cls,
+            bboxes=bboxes,
+            masks=masks,
+            kpts=np.zeros((0, 51), dtype=np.float32),  # or actual keypoints if using pose
             paths=batch['im_file'],
-            fname= Path(self.save_dir) / Path(f'val_batch{ni}_pred.jpg'),
+            fname=Path(self.save_dir) / f'val_batch{ni}_pred.jpg',
             names=self.names,
-            on_plot=self.on_plot)  # pred
+            on_plot=self.on_plot
+        )
         self.plot_masks.clear()
 
     def pred_to_json(self, predn, filename, pred_masks):
@@ -195,12 +214,14 @@ class SegmentationValidator(DetectionValidator):
         box = ops.xyxy2xywh(predn[:, :4])  # xywh
         box[:, :2] -= box[:, 2:] / 2  # xy center to top-left corner
         pred_masks = np.transpose(pred_masks, (2, 0, 1))
-        rles = map(single_encode, pred_masks)
+        with ThreadPool(1) as pool:
+            rles = pool.map(single_encode, pred_masks)
         for i, (p, b) in enumerate(zip(predn.tolist(), box.tolist())):
-            self.json_results.append({
+            self.jdict.append({
                 'image_id': image_id,
                 'category_id': self.class_map[int(p[5])],
                 'bbox': [round(x, 3) for x in b],
                 'score': round(p[4], 5),
                 'segmentation': rles[i]})
 
+    

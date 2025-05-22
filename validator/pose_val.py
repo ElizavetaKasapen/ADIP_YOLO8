@@ -120,11 +120,15 @@ class PoseValidator(DetectionValidator):
             iou = kpt_iou(gt_kpts, pred_kpts, sigma=self.sigma, area=area)
         else:  # boxes
             iou = ops.box_iou(labels[:, 1:], detections[:, :4])
-
+        
+        labels = labels.to(detections.device)
         correct = np.zeros((detections.shape[0], self.iouv.shape[0])).astype(bool)
+
         correct_class = labels[:, 0:1] == detections[:, 5]
         for i in range(len(self.iouv)):
-            x = torch.where((iou >= self.iouv[i]) & correct_class)  # IoU > threshold and classes match
+            iou_threshold = self.iouv[i].to(iou.device)
+            correct_class = correct_class.to(iou.device)
+            x = torch.where((iou >= iou_threshold) & correct_class)  # IoU > threshold and classes match
             if x[0].shape[0]:
                 matches = torch.cat((torch.stack(x, 1), iou[x[0], x[1]][:, None]),
                                     1).cpu().numpy()  # [label, detect, iou]
@@ -149,14 +153,20 @@ class PoseValidator(DetectionValidator):
 
     def plot_predictions(self, batch, preds, ni):
         """Plots predictions for YOLO model."""
+        batch_idx, cls, bboxes, _ = output_to_target(preds, self.args.max_det)
         pred_kpts = torch.cat([p[:, 6:].view(-1, *self.kpt_shape) for p in preds], 0)
-        plot_images(batch['img'],
-                    *output_to_target(preds, max_det=self.args.max_det),
-                    kpts=pred_kpts,
-                    paths=batch['im_file'],
-                    fname= Path(self.save_dir) / Path(f'val_batch{ni}_pred.jpg'),
-                    names=self.names,
-                    on_plot=self.on_plot)  # pred
+        plot_images(
+            images=batch['img'],
+            batch_idx=batch_idx,
+            cls=cls,
+            bboxes=bboxes,
+            masks=np.zeros(0, dtype=np.uint8),
+            kpts=pred_kpts,
+            paths=batch['im_file'],
+            fname= Path(self.save_dir) / Path(f'val_batch{ni}_pred.jpg'),
+            names=self.names,
+            on_plot=self.on_plot)  # pred
+
 
     def pred_to_json(self, predn, filename):
         """Converts YOLO predictions to COCO JSON format."""
