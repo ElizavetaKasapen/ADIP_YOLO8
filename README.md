@@ -233,16 +233,16 @@ As an example, you can find the output of 1st (warmup) and 10th epochs for detec
 
 
 ![Detect - Epoch 1](readme_images/detect_1st_epoch.png)
-<div align="center"><em>1st epoch (part of warmup) of detect training process</em></div>
+<p align="center"><em>1st epoch (part of warmup) of detect training process</em></p>
 
 
 ![Detect - Epoch 10.1](readme_images/detect_10th_epoch_begin.png)
 ![Detect - Epoch 10.2](readme_images/detect_10th_epoch_end.png)
-<div align="center"><em>10th epoch of detect training process</em></div>
+<p align="center"><em>10th epoch of detect training process</em></p>
 
 
 ![Detect - Tensorboard](readme_images/detect_tensorboard.png)
-<div align="center"><em>Tensorboard graphs</em></div>
+<p align="center"><em>Tensorboard graphs</em></p>
 
 ## 🛠️ TODO
 
