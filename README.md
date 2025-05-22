@@ -221,7 +221,31 @@ python main.py
 ```
 Predictions will be printed to the console and saved to the output directory.
 
+To check your graphs with Tensorboard run:
+```sh
+tensorboard --logdir  <train/save_dir>
+```
+<train/save_dir> - variable in config.yaml
 
+## 🔍 Output Examples
+
+As an example, you can find the output of 1st (warmup) and 10th epochs for detect task and Tensorboard graphs.
+
+<p float="left">
+  <img src="readme_images/detect_1st_epoch.png" width="300"/>
+</p>
+1st epoch (part of warmup) of detect training process
+
+<p float="left">
+  <img src="readme_images/detect_10th_epoch_begin.png" width="300"/>
+  <img src="readme_images/detect_10th_epoch_end.png" width="300"/>
+</p>
+10th epoch of detect training process
+
+<p float="left">
+  <img src="readme_images/detect_tensorboard.png" width="300"/>
+</p>
+Tensorboard graphs
 
 ## 🛠️ TODO
 
