@@ -263,4 +263,4 @@ As an example, you can find the outputs of 1st (warmup) and 10th epochs for dete
  [ ] Support new version of YOLO
 
 ## 👩‍💻 Authors
-- **Yelyzaveta Kasapien**: y.kasapien@student.it
+- **Yelyzaveta Kasapien**: y.kasapien@student.unisi.it
