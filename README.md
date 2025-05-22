@@ -28,7 +28,7 @@ This repository provides a modular and extensible PyTorch-based **framework for 
 
 📦 Flexible modular design for custom models and training logic
 
-📉 Tensorboard support for training monitoring and Early stopping
+📉 TensorBoard support for training monitoring and Early stopping
 
 
 ## ⚙️ Setup
@@ -212,7 +212,7 @@ This will:
 
 - Train and validate the model for the task.
 
-- Prints the traing result and save the trained model to disk to save_model_path from *config.yaml* if provided, otherwise last checkpoint.
+- Prints the training result and save the trained model to disk to save_model_path from *config.yaml* if provided, otherwise last checkpoint.
 
 2. Predict with a Model
 Set *mode: predict* and *predict* settings in *config.yaml*, and run:
@@ -229,7 +229,7 @@ tensorboard --logdir  <train/save_dir>
 
 ## 🔍 Output Examples
 
-As an example, you can find the output of 1st (warmup) and 10th epochs for detect task and Tensorboard graphs.
+As an example, you can find the outputs of 1st (warmup) and 10th epochs for detect task and Tensorboard graphs.
 
 
 ![Detect - Epoch 1](readme_images/detect_1st_epoch.png)
@@ -262,5 +262,5 @@ As an example, you can find the output of 1st (warmup) and 10th epochs for detec
 
  [ ] Support new version of YOLO
 
-## 📌 Authors
+## 👩‍💻 Authors
 - **Yelyzaveta Kasapien**: y.kasapien@student.it
