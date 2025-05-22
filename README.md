@@ -231,15 +231,18 @@ tensorboard --logdir  <train/save_dir>
 
 As an example, you can find the output of 1st (warmup) and 10th epochs for detect task and Tensorboard graphs.
 
-<div align="center"><em>1st epoch (part of warmup) of detect training process:</em></div>
-![Detect - Epoch 1](readme_images/detect_1st_epoch.png)
 
-<div align="center"><em>10th epoch of detect training process:</em></div>
+![Detect - Epoch 1](readme_images/detect_1st_epoch.png)
+<div align="center"><em>1st epoch (part of warmup) of detect training process</em></div>
+
+
 ![Detect - Epoch 10.1](readme_images/detect_10th_epoch_begin.png)
 ![Detect - Epoch 10.2](readme_images/detect_10th_epoch_end.png)
+<div align="center"><em>10th epoch of detect training process</em></div>
 
-<div align="center"><em>Tensorboard graphs:</em></div>
+
 ![Detect - Tensorboard](readme_images/detect_tensorboard.png)
+<div align="center"><em>Tensorboard graphs</em></div>
 
 ## 🛠️ TODO
 
