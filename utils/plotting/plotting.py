@@ -4,6 +4,7 @@ import warnings
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Union
 
+import os
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -192,6 +193,7 @@ def plot_images(
                 annotator.fromarray(im)
     if not save:
         return np.asarray(annotator.im)
+    os.makedirs(os.path.dirname(fname), exist_ok=True)
     annotator.im.save(fname)  # save
     if on_plot:
         on_plot(fname)

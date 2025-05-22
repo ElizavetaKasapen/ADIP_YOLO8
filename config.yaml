@@ -1,8 +1,8 @@
 task: "detect" # Could be 'detect', 'segment', or 'pose'
 mode: predict
 augment: True # apply augment to train
-model_path: models/detect/train/best.pt      # If provided, load and use this model
-save_model_path: "models/pose/train/exp1.pt"  # Where to save the model (only used in training)
+model_path:     # If provided, load and use this model models/detect/train/best.pt  
+save_model_path: "models/detect/train/detect_2ep.pt"  # Where to save the model (only used in training)
 model_size: "n" # Can be: 'n', 's', 'm', 'l', 'x'
 data: 
 

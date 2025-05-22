@@ -54,9 +54,10 @@ class Train:
         self.batch_size = self.train_args.batch
         self.epochs = self.train_args.epochs
         self.data_cfg = data_cfg
-        self.ema = ModelEMA(model)  # optional but improves val metrics
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.use_amp = self.device.type == "cuda"
+        self.model.to(self.device)
+        self.ema = ModelEMA(model)  # optional but improves val metrics
         self.scaler = GradScaler(enabled=self.use_amp)
         self.set_loss()
         self.set_validator()
@@ -295,9 +296,11 @@ class Train:
             pbar = tqdm(self.train_loader, desc=f"Epoch {epoch+1}/{self.epochs}", dynamic_ncols=True, leave=True)
             self.total_loss = 0
             for i, batch in enumerate(pbar):
-                current_iter, self.gradient_accumulate = warmup(
-                    epoch, i, batches_per_epoch, warmup_iters, self.optimizer, self.batch_size, self.lf
-                )
+                current_iter = i + batches_per_epoch * epoch
+                if current_iter <= warmup_iters:
+                    current_iter, self.gradient_accumulate = warmup(
+                        epoch, current_iter, warmup_iters, self.optimizer, self.batch_size, self.lf
+                    )
                 # Forward
                 with torch.cuda.amp.autocast(self.use_amp):
                     imgs, targets = preprocess_batch(
