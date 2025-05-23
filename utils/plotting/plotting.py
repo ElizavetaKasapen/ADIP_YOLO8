@@ -159,6 +159,7 @@ def plot_images(images,
                         with contextlib.suppress(Exception):
                             im[y:y + h, x:x + w, :][mask] = im[y:y + h, x:x + w, :][mask] * 0.4 + np.array(color) * 0.6
                 annotator.fromarray(im)
+    os.makedirs(os.path.dirname(fname), exist_ok=True)
     annotator.im.save(fname)  # save
     if on_plot:
         on_plot(fname)
