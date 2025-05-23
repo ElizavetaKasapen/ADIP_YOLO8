@@ -298,7 +298,6 @@ class Train:
             self.running_loss_items = None
             total_images = 0
             for i, batch in enumerate(pbar):
-                if i ==1: break #TODO del
                 total_images += batch['img'].shape[0]
                 current_iter = i + batches_per_epoch * epoch
                 if current_iter <= warmup_iters:

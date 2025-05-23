@@ -12,14 +12,6 @@ def copy_model_attributes(a, b, include=(), exclude=()):
         else:
             setattr(a, k, v)
 
-# def is_parallel(model):
-#     """Returns True if model is of type DP or DDP."""
-#     return isinstance(model, (nn.parallel.DataParallel, nn.parallel.DistributedDataParallel))
-
-# def de_parallel(model):
-#     """De-parallelize a model: returns single-GPU model if model is of type DP or DDP."""
-#     return model.module if is_parallel(model) else model
-
 
 class ModelEMA:
     """Updated Exponential Moving Average (EMA).
